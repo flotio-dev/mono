@@ -23,7 +23,8 @@ jobs:
       - name: List services
         id: list
         run: |
-          services=$(ls -d */ | sed 's/\///' | jq -R -s -c 'split("\n")[:-1]')
+          changed_files="${{ join(github.event.head_commit.modified, ' ') }} ${{ join(github.event.head_commit.added, ' ') }} ${{ join(github.event.head_commit.removed, ' ') }}"
+          services=$(echo "$changed_files" | tr ' ' '\n' | grep '/' | cut -d'/' -f1 | sort | uniq | jq -R -s -c 'split("\n")[:-1]')
           echo "services=$services" >> $GITHUB_OUTPUT
 
   build:
@@ -31,7 +32,6 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJson(needs.list-services.outputs.services) }}
-    if: contains(join(github.event.head_commit.modified, ' '), format('{0}/', matrix.service)) || contains(join(github.event.head_commit.added, ' '), format('{0}/', matrix.service)) || contains(join(github.event.head_commit.removed, ' '), format('{0}/', matrix.service))
     runs-on: ubuntu-latest
     permissions:
       contents: read

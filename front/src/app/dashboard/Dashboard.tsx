@@ -47,7 +47,7 @@ function ProjectList() {
       <Stack>
         {projects.map((project) => (
           <Stack direction="row" alignItems="center" spacing={2} key={project.name} mb={1}>
-            <Avatar sx={{ bgcolor: 'grey.300', color: 'black', width: 32, height: 32, fontWeight: 'bold' }}>
+            <Avatar sx={{ bgcolor: 'background.paper', color: 'text.primary', width: 32, height: 32, fontWeight: 'bold' }}>
               {project.name}
             </Avatar>
             <Typography variant="body1">{project.name}</Typography>
@@ -108,12 +108,13 @@ export default function DashboardPage() {
           <Stack direction="row" alignItems="center" spacing={2}>
             <Avatar
               sx={{
-                bgcolor: 'grey.200',
-                color: 'black',
+                bgcolor: 'background.paper',
+                color: 'text.primary',
                 width: 48,
                 height: 48,
                 fontSize: 32,
-                border: '2px solid black',
+                border: '2px solid',
+                borderColor: 'text.primary',
                 boxShadow: 1,
               }}
             >

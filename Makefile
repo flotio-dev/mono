@@ -23,7 +23,7 @@ down:
 
 # Setup Keycloak
 setup:
-	devenv run setup-keycloak
+	./setup-keycloak
 
 # Run services
 gateway:

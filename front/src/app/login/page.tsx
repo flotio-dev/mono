@@ -14,7 +14,7 @@ export default function LoginPage() {
         headers["Authorization"] = `Bearer ${session.accessToken}`;
       }
 
-      const res = await fetch("http://localhost:8000/api/hello-world", {
+      const res = await fetch("http://localhost:8080/api/hello-world", {
         method: "GET",
         headers,
       });
@@ -33,13 +33,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-sm text-center">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 w-full max-w-sm text-center">
         {!session ? (
           <>
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">Connexion</h1>
+            <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">Connexion</h1>
             <button
-              onClick={() => signIn("keycloak")}
+              onClick={() => signIn("keycloak", {}, { callbackUrl: "/dashboard" })}
               className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition mb-4"
             >
               Se connecter avec Keycloak
@@ -47,7 +47,7 @@ export default function LoginPage() {
           </>
         ) : (
           <>
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">
+            <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
               Bienvenue {session.user?.name}
             </h1>
             <button
@@ -69,7 +69,7 @@ export default function LoginPage() {
         </button>
 
         {apiResponse && (
-          <pre className="mt-4 text-left bg-gray-100 text-black p-4 rounded text-sm">
+          <pre className="mt-4 text-left bg-gray-100 dark:bg-gray-700 text-black dark:text-gray-200 p-4 rounded text-sm">
             {apiResponse}
           </pre>
         )}

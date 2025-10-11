@@ -1,0 +1,72 @@
+#!/bin/bash
+
+echo "Waiting for Keycloak to be ready..."
+while ! curl -s http://localhost:8081/realms/master > /dev/null; do
+  sleep 2
+done
+echo "Keycloak is ready. Setting up realm..."
+
+# Get admin token
+TOKEN=$(curl -s -X POST http://localhost:8081/realms/master/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=admin&grant_type=password&client_id=admin-cli" | jq -r .access_token)
+
+# Check if realm exists
+REALM_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/admin/realms/flotio -H "Authorization: Bearer $TOKEN")
+if [ "$REALM_EXISTS" != "200" ]; then
+  # Create flotio realm
+  curl -s -X POST http://localhost:8081/admin/realms \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "realm": "flotio",
+      "enabled": true,
+      "displayName": "Flotio",
+      "sslRequired": "external"
+    }'
+  echo "Realm flotio created."
+else
+  echo "Realm flotio already exists."
+fi
+
+# Check if client exists
+CLIENT_EXISTS=$(curl -s http://localhost:8081/admin/realms/flotio/clients?clientId=flotio-gateway -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id // empty')
+if [ -z "$CLIENT_EXISTS" ]; then
+  # Create client for gateway
+  CLIENT_RESPONSE=$(curl -s -X POST http://localhost:8081/admin/realms/flotio/clients \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "clientId": "flotio-gateway",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "implicitFlowEnabled": false,
+      "standardFlowEnabled": true,
+      "redirectUris": ["http://localhost:3000/api/auth/callback/keycloak", "http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"]
+    }')
+
+  CLIENT_ID=$(echo $CLIENT_RESPONSE | jq -r '.id // empty')
+  if [ -n "$CLIENT_ID" ]; then
+    echo "Client flotio-gateway created."
+  else
+    echo "Failed to create client."
+  fi
+else
+  echo "Client flotio-gateway already exists."
+  CLIENT_ID=$CLIENT_EXISTS
+fi
+
+# Retrieve client secret
+if [ -n "$CLIENT_ID" ]; then
+  SECRET=$(curl -s http://localhost:8081/admin/realms/flotio/clients/$CLIENT_ID/client-secret -H "Authorization: Bearer $TOKEN" | jq -r '.value')
+  echo "KEYCLOAK_SECRET=$SECRET" > front/.env
+  echo "Client secret retrieved and saved to front/.env"
+else
+  echo "Failed to get client ID"
+fi
+
+echo "Setup completed successfully!"

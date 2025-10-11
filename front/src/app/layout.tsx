@@ -5,6 +5,7 @@ import { Roboto } from "next/font/google";
 import theme from "../theme";
 import "./globals.css";
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { ThemeToggle } from './components/ThemeToggle';
 import Providers from './providers';
 
 // Charger la font Roboto via next/font
@@ -27,8 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={roboto.variable} suppressHydrationWarning>
-      <body>
-        <LanguageSwitcher />
+      <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <div className="flex justify-end p-4 space-x-2">
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ThemeProvider theme={theme}>
             <Providers>

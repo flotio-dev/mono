@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJson(needs.list-services.outputs.services) }}
-    if: contains(join(github.event.head_commit.modified, ' ') + ' ' + join(github.event.head_commit.added, ' ') + ' ' + join(github.event.head_commit.removed, ' '), matrix.service + '/')
+    if: contains(join(github.event.head_commit.modified, ' '), matrix.service + '/') || contains(join(github.event.head_commit.added, ' '), matrix.service + '/') || contains(join(github.event.head_commit.removed, ' '), matrix.service + '/')
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -63,10 +63,63 @@ fi
 # Retrieve client secret
 if [ -n "$CLIENT_ID" ]; then
   SECRET=$(curl -s http://localhost:8081/admin/realms/flotio/clients/$CLIENT_ID/client-secret -H "Authorization: Bearer $TOKEN" | jq -r '.value')
-  echo "KEYCLOAK_SECRET=$SECRET" > front/.env
-  echo "Client secret retrieved and saved to front/.env"
+  cat > front/.env << EOF
+KEYCLOAK_ID=flotio-gateway
+KEYCLOAK_ISSUER=http://localhost:8081/realms/flotio
+KEYCLOAK_SECRET=$SECRET
+EOF
+  echo "Keycloak configuration saved to front/.env"
 else
   echo "Failed to get client ID"
+fi
+
+# Create default user
+USER_EXISTS=$(curl -s http://localhost:8081/admin/realms/flotio/users?username=admin -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id // empty')
+if [ -z "$USER_EXISTS" ]; then
+  curl -s -X POST http://localhost:8081/admin/realms/flotio/users \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@flotio.dev",
+      "credentials": [{
+        "type": "password",
+        "value": "admin",
+        "temporary": false
+      }]
+    }'
+  echo "Default user 'admin' created."
+else
+  echo "Default user 'admin' already exists."
+fi
+
+# Setup GitHub identity provider if env vars are present
+if [ -n "$GITHUB_CLIENT_ID" ] && [ -n "$GITHUB_CLIENT_SECRET" ]; then
+  IDP_EXISTS=$(curl -s http://localhost:8081/admin/realms/flotio/identity-provider/instances/github -H "Authorization: Bearer $TOKEN" | jq -r '.alias // empty')
+  if [ -z "$IDP_EXISTS" ]; then
+    curl -s -X POST http://localhost:8081/admin/realms/flotio/identity-provider/instances \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "alias": "github",
+        "providerId": "github",
+        "enabled": true,
+        "config": {
+          "clientId": "'$GITHUB_CLIENT_ID'",
+          "clientSecret": "'$GITHUB_CLIENT_SECRET'",
+          "useJwksUrl": "true"
+        }
+      }'
+    echo "GitHub identity provider created."
+  else
+    echo "GitHub identity provider already exists."
+  fi
+else
+  echo "GitHub client ID and secret not provided, skipping GitHub setup."
 fi
 
 echo "Setup completed successfully!"

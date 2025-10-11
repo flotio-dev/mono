@@ -1,0 +1,1 @@
+// Remove custom _app.tsx, as Next.js 13+ with app directory does not require it for i18n. Use i18n in layout.tsx instead.

@@ -1,0 +1,12 @@
+{
+  "welcome": "Welcome to the dashboard!",
+  "menu": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "tokens": "Tokens"
+  },
+  "access_token": {
+    "title": "Access Token",
+    "description": "Your access token is:"
+  }
+}

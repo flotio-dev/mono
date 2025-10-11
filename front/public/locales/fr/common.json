@@ -1,0 +1,12 @@
+{
+  "welcome": "Bienvenue sur le tableau de bord !",
+  "menu": {
+    "dashboard": "Tableau de bord",
+    "projects": "Projets",
+    "tokens": "Jetons"
+  },
+  "access_token": {
+    "title": "Jeton d'accès",
+    "description": "Votre jeton d'accès est :"
+  }
+}

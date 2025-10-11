@@ -33,3 +33,5 @@ COPY --from=build /bin/server /bin/
 EXPOSE 2545
 
 ENTRYPOINT [ "/bin/server" ]
+
+# Trigger CI

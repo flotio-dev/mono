@@ -33,3 +33,5 @@ COPY --from=build /bin/server /bin/
 EXPOSE 8080
 
 CMD ["/bin/server"]
+
+# Trigger CI

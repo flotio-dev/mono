@@ -23,7 +23,8 @@ jobs:
       - name: List services
         id: list
         run: |
-          export CHANGED_FILES="${{ join(github.event.head_commit.modified, ' ') }} ${{ join(github.event.head_commit.added, ' ') }} ${{ join(github.event.head_commit.removed, ' ') }}"
+          changed_files=$(git diff --name-only HEAD~1..HEAD | tr '\n' ' ')
+          export CHANGED_FILES="$changed_files"
           services=$(./.github/scripts/list-changed-services.sh)
           echo "services=$services" >> $GITHUB_OUTPUT
 

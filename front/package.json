@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -17,7 +17,7 @@
     "@mui/material": "^7.3.2",
     "@mui/material-nextjs": "^7.3.2",
     "i18next": "^25.5.2",
-    "next": "^16.0.0-canary.1",
+    "next": "^15.5.4",
     "next-auth": "^4.22.1",
     "next-i18next": "^15.4.2",
     "react": "19.1.0",

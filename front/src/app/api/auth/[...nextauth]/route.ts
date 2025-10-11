@@ -9,25 +9,25 @@ interface ExtendedJWT extends JWT {
   accessTokenExpires?: number;
 }
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
     providers: [
         KeycloakProvider({
             clientId: process.env.KEYCLOAK_ID || '',
             clientSecret: process.env.KEYCLOAK_SECRET || '',
-            issuer: process.env.KEYCLOAK_ISSUER || '',
+            issuer: `${process.env.KEYCLOAK_BASE_URL || 'http://localhost:8081'}/realms/${process.env.KEYCLOAK_REALM || 'flotio'}`,
         })
     ],
     callbacks: {
         async jwt({ token, account }: { token: JWT; account?: Account | null }) {
             // Persist the OAuth access_token to the token right after signin
             // and handle token refresh when expired.
-            const KEYCLOAK_ISSUER = process.env.KEYCLOAK_ISSUER || '';
+            const keycloakIssuer = `${process.env.KEYCLOAK_BASE_URL || 'http://localhost:8081'}/realms/${process.env.KEYCLOAK_REALM || 'flotio'}`;
             const KEYCLOAK_ID = process.env.KEYCLOAK_ID || '';
             const KEYCLOAK_SECRET = process.env.KEYCLOAK_SECRET || '';
 
             const refreshAccessToken = async (t: ExtendedJWT) => {
                 try {
-                    const url = `${KEYCLOAK_ISSUER.replace(/\/$/, '')}/protocol/openid-connect/token`;
+                    const url = `${keycloakIssuer.replace(/\/$/, '')}/protocol/openid-connect/token`;
                     const body = new URLSearchParams();
                     body.set('grant_type', 'refresh_token');
                     if (t.refreshToken) {

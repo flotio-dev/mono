@@ -11,7 +11,7 @@ export type ProxyRequestBody = Record<string, ProxyRequest>;
 export type ProxyResponseItem = {
   status: number;
   headers: Record<string, string[]>;
-  body: string;
+  body: unknown;
   success: boolean;
   details?: any;
   error?: any;

@@ -41,7 +41,7 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
   const [orgs, setOrgs] = React.useState<{ name: string; id: string }[]>([]);
   const [current, setCurrent] = React.useState<{ name: string; id: string } | null>(null);
   const router = useRouter();
-  const { data, callProxy } = useProxy();
+  const { data: proxyData, callProxy } = useProxy();
 
   const callProxyRequests = () => {
     callProxy({
@@ -84,8 +84,19 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
     fetchOrgs();*/
   }, [status, session]);
 
+  useEffect(() => {
+    if (proxyData?.getOrgsByUser?.success) {
+      const orgsData = proxyData.getOrgsByUser.details.data;
+      setOrgs(Array.isArray(orgsData) ? orgsData : []);
+      const storedId = typeof window !== 'undefined' ? localStorage.getItem('organizationId') : null;
+      const found = orgsData.find((o: { name: string; id: string }) => o.id === storedId);
+      setCurrent(found || orgsData[0] || null);
+    }
+  }, [proxyData]);
+
   const handleSelectOrg = (org: { name: string; id: string }) => {
     setOpen(false);
+    setCurrent(org);
     if (typeof window !== 'undefined') {
       localStorage.setItem('organizationId', org.id);
     }
@@ -120,7 +131,7 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
         <Box sx={{ width: 224, p: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('settings.organizations_title') || 'Organizations'}</Typography>
           <Stack spacing={1} sx={{ mb: 1 }}>
-            {data?.getOrgsByUser.details.data.map((o: { name: string; id: string }) => (
+            {proxyData?.getOrgsByUser.details.data.map((o: { name: string; id: string }) => (
               <Button
                 key={o.id}
                 variant={current && o.id === current.id ? 'contained' : 'outlined'}

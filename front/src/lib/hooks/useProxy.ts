@@ -18,7 +18,7 @@ export function useProxy() {
                 headers["Authorization"] = `Bearer ${session.accessToken}`;
             }
 
-            const res = await fetch("http://localhost:8000/api/gateway/proxy", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_GATEWAY_BASE_URL || "http://localhost:8080"}/api/gateway/proxy`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify(requests),

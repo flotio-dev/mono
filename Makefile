@@ -1,8 +1,8 @@
 # Makefile for Flotio development environment
 
-.PHONY: help up down setup gateway front project-service clean
+.PHONY: help up down setup gateway front project-service organization-service
 
-# Default target
+# Default targetin
 help:
 	@echo "Available commands:"
 	@echo "  up              - Start Docker Compose services (PostgreSQL + Keycloak)"
@@ -11,6 +11,7 @@ help:
 	@echo "  gateway         - Run the gateway service"
 	@echo "  front           - Run the frontend service"
 	@echo "  project-service - Run the project service"
+	@echo "  organization-service - Run the organization service"
 	@echo "  devenv          - Enter devenv shell"
 	@echo "  clean           - Clean up containers and volumes"
 
@@ -23,7 +24,7 @@ down:
 
 # Setup Keycloak
 setup:
-	./setup-keycloak
+	go run setup-keycloak.go
 
 # Run services
 gateway:
@@ -34,6 +35,9 @@ front:
 
 project-service:
 	cd project-service && go run cmd/main.go
+
+organization-service:
+	cd organization-service && go run cmd/main.go
 
 # Devenv
 devenv:

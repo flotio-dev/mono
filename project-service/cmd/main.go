@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/flotio-dev/project-service/configs"
 	"github.com/flotio-dev/project-service/pkg/api"
 	"github.com/flotio-dev/project-service/pkg/auth"
@@ -13,6 +15,8 @@ import (
 )
 
 func main() {
+	godotenv.Load()
+
 	cfg, _ := configs.FromEnv()
 	if cfg.DatabaseURL == "" {
 		log.Println("warning: DATABASE_URL is empty")

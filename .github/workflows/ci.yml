@@ -23,12 +23,13 @@ jobs:
       - name: List services
         id: list
         run: |
-          changed_files="${{ join(github.event.head_commit.modified, ' ') }} ${{ join(github.event.head_commit.added, ' ') }} ${{ join(github.event.head_commit.removed, ' ') }}"
-          services=$(echo "$changed_files" | tr ' ' '\n' | grep '/' | cut -d'/' -f1 | sort | uniq | jq -R -s -c 'split("\n")[:-1]')
+          export CHANGED_FILES="${{ join(github.event.head_commit.modified, ' ') }} ${{ join(github.event.head_commit.added, ' ') }} ${{ join(github.event.head_commit.removed, ' ') }}"
+          services=$(./.github/scripts/list-changed-services.sh)
           echo "services=$services" >> $GITHUB_OUTPUT
 
   build:
     needs: list-services
+    if: needs.list-services.outputs.services != '[]'
     strategy:
       matrix:
         service: ${{ fromJson(needs.list-services.outputs.services) }}

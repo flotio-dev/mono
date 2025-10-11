@@ -11,7 +11,7 @@ import { LanguageSwitcher } from './components/LanguageSwitcher';
 // components when needed.
 import SessionClientProvider from './providers/SessionClientProvider';
 import { getServerSession } from 'next-auth';
-import { authOptions } from './api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import type { Session } from 'next-auth';
 import ToastContainer from "./components/ToastContainer";
 import { ToastProvider } from "@/lib/hooks/useToast";
@@ -21,7 +21,7 @@ const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-roboto", 
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {

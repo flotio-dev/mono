@@ -14,7 +14,8 @@ import {
   IconButton,
   Stack,
 } from '@mui/material';
-import { useTranslation } from 'next-i18next';
+import { useEffect, useState } from 'react';
+import { getTranslations } from '../../lib/clientTranslations';
 
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
@@ -42,15 +43,66 @@ function maskValue(value: string): string {
 }
 
 function TokenTable({ tokens }: { tokens: Token[] }) {
+    const [translations, setTranslations] = useState<Record<string, any> | null>(null);
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const getPreferredLocale = (p?: string | null) => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
+      if (stored === 'en' || stored === 'fr') return stored;
+    } catch {}
+    if (!p) return 'fr';
+    const parts = p.split('/');
+    const candidate = parts[1];
+    if (candidate === 'en' || candidate === 'fr') return candidate;
+    return 'fr';
+  };
+
+  const [locale, setLocale] = typeof window !== 'undefined' ? useState(() => getPreferredLocale(pathname)) : useState('fr');
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async (loc: string) => {
+      const json = await getTranslations(loc);
+      if (mounted) setTranslations(json);
+    };
+    load(locale);
+
+    const onLocaleChanged = (e: any) => {
+      const newLoc = e?.detail ?? (typeof window !== 'undefined' ? localStorage.getItem('lang') : null);
+      if (newLoc) setLocale(newLoc);
+    };
+
+    window.addEventListener('localeChanged', onLocaleChanged as EventListener);
+    const onStorage = () => onLocaleChanged(null);
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('localeChanged', onLocaleChanged as EventListener);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [locale, pathname]);
+
+  const t = (key: string) => {
+    if (!translations) return key;
+    const parts = key.split('.');
+    let cur: any = translations;
+    for (const p of parts) {
+      if (cur && typeof cur === 'object' && p in cur) cur = cur[p];
+      else return key;
+    }
+    return typeof cur === 'string' ? cur : key;
+  };
   return (
     <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Value</TableCell>
-            <TableCell>Last used</TableCell>
+            <TableCell>{t('common.name')}</TableCell>
+            <TableCell>{t('access_token.status')}</TableCell>
+            <TableCell>{t('common.value')}</TableCell>
+            <TableCell>{t('access_token.last_used')}</TableCell>
             <TableCell align="right"></TableCell>
           </TableRow>
         </TableHead>
@@ -75,7 +127,57 @@ function TokenTable({ tokens }: { tokens: Token[] }) {
 }
 
 export default function AccessToken() {
-  const { t } = useTranslation('common');
+  const [translations, setTranslations] = useState<Record<string, any> | null>(null);
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const getPreferredLocale = (p?: string | null) => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
+      if (stored === 'en' || stored === 'fr') return stored;
+    } catch {}
+    if (!p) return 'fr';
+    const parts = p.split('/');
+    const candidate = parts[1];
+    if (candidate === 'en' || candidate === 'fr') return candidate;
+    return 'fr';
+  };
+
+  const [locale, setLocale] = typeof window !== 'undefined' ? useState(() => getPreferredLocale(pathname)) : useState('fr');
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async (loc: string) => {
+      const json = await getTranslations(loc);
+      if (mounted) setTranslations(json);
+    };
+    load(locale);
+
+    const onLocaleChanged = (e: any) => {
+      const newLoc = e?.detail ?? (typeof window !== 'undefined' ? localStorage.getItem('lang') : null);
+      if (newLoc) setLocale(newLoc);
+    };
+
+    window.addEventListener('localeChanged', onLocaleChanged as EventListener);
+    const onStorage = () => onLocaleChanged(null);
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('localeChanged', onLocaleChanged as EventListener);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [locale, pathname]);
+
+  const t = (key: string) => {
+    if (!translations) return key;
+    const parts = key.split('.');
+    let cur: any = translations;
+    for (const p of parts) {
+      if (cur && typeof cur === 'object' && p in cur) cur = cur[p];
+      else return key;
+    }
+    return typeof cur === 'string' ? cur : key;
+  };
   return (
     <Box display="flex" minHeight="100vh">
       <Menu />
@@ -91,7 +193,7 @@ export default function AccessToken() {
         <TokenTable tokens={personalTokens} />
 
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6">Robot users</Typography>
+          <Typography variant="h6">{t('access_token.robot_users')}</Typography>
           <Button variant="outlined">+ {t('access_token.title')}</Button>
         </Stack>
         <TokenTable tokens={robotTokens} />

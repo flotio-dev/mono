@@ -1,3 +1,4 @@
+# Use the official Node.js image as the base image
 FROM node:18-alpine AS base
 
 # Install dependencies only when needed
@@ -7,8 +8,11 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json package-lock.json* ./
+RUN \
+  if [ -f package-lock.json ]; then npm ci --only=production; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -56,5 +60,3 @@ ENV HOSTNAME "0.0.0.0"
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
 CMD ["node", "server.js"]
-
-# Trigger CI final v3

@@ -1,12 +1,106 @@
 {
-  "welcome": "Welcome to the dashboard!",
+  "common": {
+    "first_name": "First name",
+    "last_name": "Last name",
+    "email": "Email",
+    "name": "Name",
+    "value": "Value",
+    "add": "Add",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "username": "Username",
+    "description": "Description",
+    "slug": "Slug" 
+  },
+  "login": {
+    "call_gateway": "Call Gateway: Hello World",
+    "call_gateway_with_token": "Call Gateway: Hello World (with token)",
+    "call_gateway_without_token": "Call Gateway: Hello World (without token)",
+    "sign_in_keycloak": "Sign in with Keycloak",
+    "sign_out": "Sign out",
+    "welcome_user": "Welcome {{name}}"
+  },
   "menu": {
     "dashboard": "Dashboard",
     "projects": "Projects",
-    "tokens": "Tokens"
+    "tokens": "Tokens",
+    "main": "Main",
+    "account": "Account",
+    "subscription": "Subscription",
+    "credentials": "Credentials",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "account_settings": "Account settings",
+    "billing": "Billing",
+    "manage_organization": "Manage Organization",
+    "environment_variables": "Environment variables",
+    "credentials_page": "Credentials",
+    "access_tokens": "Access tokens",
+    "usage": "Usage"
+  },
+  "dashboard": {
+    "projects": "Projects",
+    "all_projects": "All Projects",
+    "recent_activity": "Recent activity",
+    "changelog": "Changelog"
+  },
+  "listing_projects":{
+    "projects": "Projects",
+    "create_project": "Create a Project",
+    "recent_activity": "Recent activity"
+  },
+  "organization": {
+    "organization_name": "Organization name",
+    "organisation_info": "Organization informations",
+    "add_organization": "Add organization",
+    "users_in_organization": "Users in organization", 
+    "add_user": "Add user", 
+    "user": "User",
+    "add": "Add",
+    "admin": "Admin",
+    "writer": "Writer",
+    "reader": "Reader",
+    "last_logged_in": "Last logged in",
+    "role": "Role",
+    "edit_user": "Edit user",
+    "delete_user": "Delete user",
+    "add_member_in_organization": "Add member in organization",
+    "no_user_found": "No user found",
+    "user_already_in_organization": "User is already in the organization",
+    "cannot_add_yourself": "You cannot add yourself",
+    "user_added": "User added successfully",
+    "user_deleted": "User deleted successfully",
+    "user_updated": "User updated successfully",
+    "confirm_delete_user": "Are you sure you want to delete this user? This action is irreversible."
   },
   "access_token": {
     "title": "Access Token",
-    "description": "Your access token is:"
+    "description": "Your access token is:",
+    "robot_users": "Robot users",
+    "status": "Status",
+    "last_used": "Last used"
+  },
+  "settings": {
+    "title": "Account settings",
+    "user_settings": "User settings",
+    "user_settings_description": "Change your email, password, and more inside user settings.",
+    "user_settings_button": "Update settings ",
+    "account_information": "Account information",
+    "avatar": "Avatar",
+    "plan": "Plan",
+    "connections": "Connections",
+    "github_status": "Github - {{status}}",
+    "github_connected": "Connected",
+    "github_not_connected": "Not connected",
+    "disconnect": "Disconnect",
+    "connect": "Connect",
+    "language": "Language",
+    "change_org_hint": "Click to change the organization",
+    "organizations_title": "Organizations",
+    "new_organization": "New organization",
+    "add_organization": "Add organization",
+    "close": "Close"
   }
 }

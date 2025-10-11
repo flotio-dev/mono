@@ -1,37 +1,50 @@
 "use client";
+import { useEffect, useState } from 'react';
 import i18next from 'i18next';
-import { useEffect } from 'react';
 
+// Lightweight language switcher that uses Next.js locale routing (route prefixes)
+// while keeping a best-effort compatibility with the existing i18next setup.
 export function LanguageSwitcher() {
-  // Defensive: Only call changeLanguage if i18next is initialized and has the method
-  const i18n = i18next;
-
-  useEffect(() => {
-    const lang = typeof window !== 'undefined' ? (localStorage.getItem('lang') || navigator.language.split('-')[0]) : 'fr';
-    if (
-      i18n.language !== lang &&
-      ['en', 'fr'].includes(lang) &&
-      typeof i18n.changeLanguage === 'function' &&
-      i18n.isInitialized
-    ) {
-      i18n.changeLanguage(lang);
+  const [value, setValue] = useState(() => {
+    try {
+      return (typeof window !== 'undefined' && localStorage.getItem('lang')) || (i18next?.language ?? 'fr');
+    } catch {
+      return i18next?.language ?? 'fr';
     }
-  }, [i18n]);
+  });
+
+  // Keep i18next in sync when available (non-breaking). If you fully migrate to
+  // Next's localization you can remove this.
+  useEffect(() => {
+    if (i18next && i18next.isInitialized && i18next.changeLanguage && value && i18next.language !== value) {
+      try {
+        i18next.changeLanguage(value);
+      } catch {
+        // ignore
+      }
+    }
+  }, [value]);
+
+  const locales = ['fr', 'en'];
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const lang = e.target.value;
-    if (typeof i18n.changeLanguage === 'function' && i18n.isInitialized) {
-      i18n.changeLanguage(lang);
-    }
+    setValue(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('lang', lang);
+      // Inform other components (and tabs) the locale changed
+      try {
+        window.dispatchEvent(new CustomEvent('localeChanged', { detail: lang }));
+      } catch {
+        // fallback: use storage event by updating a dedicated key
+        localStorage.setItem('lang_changed_at', Date.now().toString());
+      }
     }
   };
 
   return (
-    <select value={i18n.language} onChange={handleChange}>
-      <option value="fr">Français</option>
-      <option value="en">English</option>
+    <select value={value} onChange={handleChange}>
+      {locales.map(lang => <option key={lang} value={lang}>{lang.toUpperCase()}</option>)}
     </select>
   );
 }

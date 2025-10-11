@@ -10,6 +10,9 @@ import {
   Chip,
 } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import { useEffect, useState } from 'react';
+import { getTranslations } from '../../lib/clientTranslations';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import Link from 'next/link';
 import Menu from '../components/Menu';
@@ -31,24 +34,24 @@ const changelog = [
   { label: 'Bug Fix', desc: 'Fixed: small issue affecting performance.' },
 ];
 
-function ProjectList() {
+function ProjectList({ t }: { t: (k: string) => string }) {
   return (
     <Paper variant="outlined" sx={{ mb: 4, p: 2 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <FolderIcon /> <Typography variant="h6">Projects</Typography>
+          <FolderIcon /> <Typography variant="h6">{t('dashboard.projects')}</Typography>
         </Stack>
         <Link href="/projects" passHref>
           <Button endIcon={<ArrowForwardIcon />} variant="text">
-            All Projects
+            {t('dashboard.all_projects')}
           </Button>
         </Link>
       </Stack>
       <Stack>
         {projects.map((project) => (
           <Stack direction="row" alignItems="center" spacing={2} key={project.name} mb={1}>
-            <Avatar sx={{ bgcolor: 'background.paper', color: 'text.primary', width: 32, height: 32, fontWeight: 'bold' }}>
-              {project.name}
+            <Avatar sx={{ bgcolor: 'primary.main', color: 'white' }}>
+              {project.name[0]}
             </Avatar>
             <Typography variant="body1">{project.name}</Typography>
           </Stack>
@@ -58,11 +61,11 @@ function ProjectList() {
   );
 }
 
-function RecentActivity() {
+function RecentActivity({ t }: { t: (k: string) => string }) {
   return (
     <Paper variant="outlined" sx={{ mb: 4, p: 2 }}>
       <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-        <FolderIcon /> <Typography variant="h6">Recent Activity</Typography>
+        <FolderIcon /> <Typography variant="h6">{t('dashboard.recent_activity')}</Typography>
       </Stack>
       <Stack>
         {activities.map((activity, idx) => (
@@ -76,11 +79,11 @@ function RecentActivity() {
   );
 }
 
-function Changelog() {
+function Changelog({ t }: { t: (k: string) => string }) {
   return (
     <Paper variant="outlined" sx={{ mb: 4, p: 2 }}>
       <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-        <FolderIcon /> <Typography variant="h6">Changelog</Typography>
+        <FolderIcon /> <Typography variant="h6">{t('dashboard.changelog')}</Typography>
       </Stack>
       <Stack>
         {changelog.map((change, idx) => (
@@ -100,33 +103,75 @@ function Changelog() {
 }
 
 export default function DashboardPage() {
+  const [translations, setTranslations] = useState<Record<string, unknown> | null>(null);
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const getPreferredLocale = (p?: string | null) => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
+      if (stored === 'en' || stored === 'fr') return stored;
+    } catch {}
+    if (!p) return 'fr';
+    const parts = p.split('/');
+    const candidate = parts[1];
+    if (candidate === 'en' || candidate === 'fr') return candidate;
+    return 'fr';
+  };
+
+  const [locale, setLocale] = useState(() => {
+    if (typeof window === 'undefined') return 'fr';
+    return getPreferredLocale(pathname);
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async (loc: string) => {
+      const json = await getTranslations(loc);
+      if (mounted) setTranslations(json);
+    };
+    load(locale);
+
+    const onLocaleChanged = (e: CustomEvent) => {
+      const newLoc = e?.detail ?? (typeof window !== 'undefined' ? localStorage.getItem('lang') : null);
+      if (newLoc) setLocale(newLoc);
+    };
+
+    window.addEventListener('localeChanged', onLocaleChanged as EventListener);
+    const onStorage = () => onLocaleChanged(new CustomEvent('storage'));
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('localeChanged', onLocaleChanged as EventListener);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [locale, pathname, setLocale]);
+
+  const t = (key: string) => {
+    if (!translations) return key;
+    const parts = key.split('.');
+    let cur: unknown = translations;
+    for (const p of parts) {
+      if (cur && typeof cur === 'object' && p in cur) cur = (cur as Record<string, unknown>)[p];
+      else return key;
+    }
+    return typeof cur === 'string' ? cur : key;
+  };
   return (
     <Box display="flex" minHeight="100vh">
       <Menu />
       <Box component="main" flex={1} p={4}>
         <Stack spacing={4}>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Avatar
-              sx={{
-                bgcolor: 'background.paper',
-                color: 'text.primary',
-                width: 48,
-                height: 48,
-                fontSize: 32,
-                border: '2px solid',
-                borderColor: 'text.primary',
-                boxShadow: 1,
-              }}
-            >
-              <span role="img" aria-label="dashboard">🎨</span>
-            </Avatar>
+            <SpaceDashboardIcon fontSize="large" color="primary" />
+
             <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
-              Dashboard
+              {t('menu.dashboard')}
             </Typography>
           </Stack>
-          <ProjectList />
-          <RecentActivity />
-          <Changelog />
+          <ProjectList t={t} />
+          <RecentActivity t={t} />
+          <Changelog t={t} />
         </Stack>
       </Box>
     </Box>

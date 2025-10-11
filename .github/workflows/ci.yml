@@ -8,6 +8,7 @@ on:
       - 'front/**'
       - 'gateway/**'
       - 'project-service/**'
+      - 'organisation-service/**'
 
 env:
   REGISTRY: ghcr.io
@@ -20,13 +21,30 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: List services
+        with:
+          fetch-depth: 0  # 👈 Needed to compare commits
+      - name: Determine changed services
         id: list
         run: |
-          changed_files=$(git show --name-only --format= HEAD | tr '\n' ' ')
-          export CHANGED_FILES="$changed_files"
-          services=$(./.github/scripts/list-changed-services.sh)
-          echo "services=$services" >> $GITHUB_OUTPUT
+          # Compare current commit with previous one on main
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          echo "Changed files:"
+          echo "$changed_files"
+
+          services=()
+          for path in $changed_files; do
+            if [[ $path == front/* ]]; then
+              services+=("\"front\"")
+            elif [[ $path == gateway/* ]]; then
+              services+=("\"gateway\"")
+            elif [[ $path == project-service/* ]]; then
+              services+=("\"project-service\"")
+            fi
+          done
+
+          # Remove duplicates and output JSON array
+          unique_services=$(echo "${services[@]}" | tr ' ' '\n' | sort -u | jq -cs '.')
+          echo "services=$unique_services" >> $GITHUB_OUTPUT
 
   build:
     needs: list-services
@@ -41,19 +59,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.service }}
-      - name: Build and push ${{ matrix.service }} Docker image
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
         with:
           context: ./${{ matrix.service }}
           push: true

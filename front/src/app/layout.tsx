@@ -4,15 +4,15 @@ import { ThemeProvider } from "@mui/material/styles";
 import { Roboto } from "next/font/google";
 import theme from "../theme";
 import "./globals.css";
-import { appWithTranslation } from 'next-i18next';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import Providers from './providers';
 
 // Charger la font Roboto via next/font
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-roboto", 
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +31,9 @@ export default function RootLayout({
         <LanguageSwitcher />
         <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ThemeProvider theme={theme}>
-            {children}
+            <Providers>
+              {children}
+            </Providers>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

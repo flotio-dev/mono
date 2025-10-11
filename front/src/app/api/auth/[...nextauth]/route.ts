@@ -4,7 +4,7 @@ import KeycloakProvider from "next-auth/providers/keycloak";
 const handler = NextAuth({
     providers: [
         KeycloakProvider({
-            clientId: process.env?.KEYCLOAK_ID!,
+            clientId: process.env.KEYCLOAK_ID!,
             clientSecret: process.env.KEYCLOAK_SECRET!,
             issuer: process.env.KEYCLOAK_ISSUER!,
         })
@@ -17,7 +17,7 @@ const handler = NextAuth({
             }
             return token
         },
-        async session({ session, token, user }) {
+        async session({ session, token }) {
             // Send properties to the client, like an access_token from a provider.
             session.accessToken = token.accessToken
             return session

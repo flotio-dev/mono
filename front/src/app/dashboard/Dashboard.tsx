@@ -6,7 +6,6 @@ import {
   Typography,
   Button,
   Paper,
-  IconButton,
   Avatar,
   Chip,
 } from '@mui/material';
@@ -46,7 +45,7 @@ function ProjectList() {
         </Link>
       </Stack>
       <Stack>
-        {projects.map((project, idx) => (
+        {projects.map((project) => (
           <Stack direction="row" alignItems="center" spacing={2} key={project.name} mb={1}>
             <Avatar sx={{ bgcolor: 'grey.300', color: 'black', width: 32, height: 32, fontWeight: 'bold' }}>
               {project.name}

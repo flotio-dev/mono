@@ -1,6 +1,5 @@
 "use client";
 import i18next from 'i18next';
-import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 
 export function LanguageSwitcher() {

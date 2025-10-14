@@ -2,13 +2,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/joho/godotenv"
 
+	"github.com/flotio-dev/logs-service/configs"
 	"github.com/flotio-dev/logs-service/pkg/api"
 	"github.com/flotio-dev/logs-service/pkg/httpx"
 	"github.com/flotio-dev/logs-service/pkg/middleware"
@@ -17,10 +19,12 @@ import (
 func main() {
 	godotenv.Load()
 
+	cfg, _ := configs.FromEnv()
+
 	r := api.Router()
 
 	corsOptions := handlers.CORS(
-		handlers.AllowedOrigins([]string{os.Getenv("CORS_ORIGINS")}),
+		handlers.AllowedOrigins([]string{cfg.CORSOrigins}),
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
 		handlers.ExposedHeaders([]string{"Content-Length"}),
@@ -39,6 +43,13 @@ func main() {
 		httpx.OK(w, map[string]any{"message": "World!"})
 	}).Methods("GET")
 
-	log.Println("Server listening on " + os.Getenv("SERVER_URL"))
-	log.Fatal(http.ListenAndServe(os.Getenv("SERVER_URL"), corsOptions(r)))
+	log.Printf("Server listening on :%d", cfg.HTTPPort)
+	srv := &http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.HTTPPort),
+		Handler:           corsOptions(r),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      10 * time.Second,
+	}
+	log.Fatal(srv.ListenAndServe())
 }

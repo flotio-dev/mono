@@ -9,6 +9,8 @@ on:
       - 'gateway/**'
       - 'project-service/**'
       - 'organisation-service/**'
+      - 'logs-service/**'
+      - 'build-service/**'
 
 env:
   REGISTRY: ghcr.io
@@ -39,6 +41,12 @@ jobs:
               services+=("\"gateway\"")
             elif [[ $path == project-service/* ]]; then
               services+=("\"project-service\"")
+            elif [[ $path == organisation-service/* ]]; then
+              services+=("\"organisation-service\"")
+            elif [[ $path == logs-service/* ]]; then
+              services+=("\"logs-service\"")
+            elif [[ $path == build-service/* ]]; then
+              services+=("\"build-service\"")
             fi
           done
 

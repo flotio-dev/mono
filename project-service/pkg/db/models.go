@@ -18,11 +18,18 @@ type Project struct {
 	GithubURL    *string `json:"github_url,omitempty"`               // https://github.com/owner/repo
 	Subscription *int    `json:"subscription_used,omitempty"`        // nombre d'abonnements utilisés
 
-	Stats   []ProjectStats `gorm:"foreignKey:ProjectID" json:"-"`
-	Usages  []ProjectUsage `gorm:"foreignKey:ProjectID" json:"-"`
-	Branches []Branch      `gorm:"foreignKey:ProjectID" json:"-"`
-	EnvVars []EnvVar       `gorm:"foreignKey:ProjectID" json:"-"`
-	Builds  []Build        `gorm:"foreignKey:ProjectID" json:"-"`
+	// Build configuration
+	KeystoreID     *string `json:"keystore_id,omitempty"`
+	FlutterVersion *string `json:"flutter_version,omitempty"`
+	GradleVersion  *string `json:"gradle_version,omitempty"`
+	Platform       string  `gorm:"size:16;default:'android'" json:"platform"` // android, ios, etc.
+	FolderID       *string `json:"folder_id,omitempty"`                       // used when repo_url is null
+
+	Stats    []ProjectStats `gorm:"foreignKey:ProjectID" json:"-"`
+	Usages   []ProjectUsage `gorm:"foreignKey:ProjectID" json:"-"`
+	Branches []Branch       `gorm:"foreignKey:ProjectID" json:"-"`
+	EnvVars  []EnvVar       `gorm:"foreignKey:ProjectID" json:"-"`
+	Builds   []Build        `gorm:"foreignKey:ProjectID" json:"-"`
 }
 
 // ProjectStats stocke des statistiques journalières

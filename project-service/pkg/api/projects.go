@@ -59,15 +59,34 @@ func (a *API) mountProjects(api *mux.Router) {
 	api.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
 		sub, _ := middleware.GetValue[string](r, "sub")
 		var in struct {
-			Name        string  `json:"name"`
-			GroupID     *string `json:"group_id"`
-			GithubToken *string `json:"github_token"`
+			Name           string  `json:"name"`
+			GroupID        *string `json:"group_id"`
+			GithubToken    *string `json:"github_token"`
+			KeystoreID     *string `json:"keystore_id"`
+			FlutterVersion *string `json:"flutter_version"`
+			GradleVersion  *string `json:"gradle_version"`
+			Platform       *string `json:"platform"`
+			FolderID       *string `json:"folder_id"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil || in.Name == "" {
 			httpx.BadRequest(w, "invalid payload (name required)")
 			return
 		}
-		p := db.Project{UserID: sub, GroupID: in.GroupID, Name: in.Name, GithubToken: in.GithubToken}
+		platform := "android"
+		if in.Platform != nil {
+			platform = *in.Platform
+		}
+		p := db.Project{
+			UserID:         sub,
+			GroupID:        in.GroupID,
+			Name:           in.Name,
+			GithubToken:    in.GithubToken,
+			KeystoreID:     in.KeystoreID,
+			FlutterVersion: in.FlutterVersion,
+			GradleVersion:  in.GradleVersion,
+			Platform:       platform,
+			FolderID:       in.FolderID,
+		}
 		if err := a.DB.Create(&p).Error; err != nil {
 			httpx.InternalError(w, err.Error())
 			return
@@ -97,7 +116,7 @@ func (a *API) mountProjects(api *mux.Router) {
 		sub, groups := getUserAndGroups(r)
 		id := mux.Vars(r)["projectID"]
 		var p db.Project
-		if err := a.DB.First(&p, "id = ?", id).Error; err != nil {
+		if err := a.DB.Preload("EnvVars").First(&p, "id = ?", id).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				httpx.NotFound(w, "project not found")
 				return
@@ -130,9 +149,14 @@ func (a *API) mountProjects(api *mux.Router) {
 			return
 		}
 		var in struct {
-			Name        *string `json:"name"`
-			GroupID     *string `json:"group_id"`
-			GithubToken *string `json:"github_token"`
+			Name           *string `json:"name"`
+			GroupID        *string `json:"group_id"`
+			GithubToken    *string `json:"github_token"`
+			KeystoreID     *string `json:"keystore_id"`
+			FlutterVersion *string `json:"flutter_version"`
+			GradleVersion  *string `json:"gradle_version"`
+			Platform       *string `json:"platform"`
+			FolderID       *string `json:"folder_id"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 			httpx.BadRequest(w, "invalid payload")
@@ -147,6 +171,21 @@ func (a *API) mountProjects(api *mux.Router) {
 		}
 		if in.GithubToken != nil {
 			updates["github_token"] = in.GithubToken
+		}
+		if in.KeystoreID != nil {
+			updates["keystore_id"] = in.KeystoreID
+		}
+		if in.FlutterVersion != nil {
+			updates["flutter_version"] = in.FlutterVersion
+		}
+		if in.GradleVersion != nil {
+			updates["gradle_version"] = in.GradleVersion
+		}
+		if in.Platform != nil {
+			updates["platform"] = *in.Platform
+		}
+		if in.FolderID != nil {
+			updates["folder_id"] = in.FolderID
 		}
 		if len(updates) == 0 {
 			httpx.OK(w, p)

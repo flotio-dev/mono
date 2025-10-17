@@ -13,3 +13,7 @@ func writeJSON(w http.ResponseWriter, v interface{}) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
+
+func readJSON(r *http.Request, v interface{}) error {
+	return json.NewDecoder(r.Body).Decode(v)
+}

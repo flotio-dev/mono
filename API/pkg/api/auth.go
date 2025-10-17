@@ -3,10 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/Nerzal/gocloak/v13"
+	"github.com/flotio-dev/api/pkg/db"
 )
 
 func getKeycloakClient() *gocloak.GoCloak {
@@ -55,6 +58,17 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	err = client.SetPassword(ctx, token.AccessToken, userID, realm, userData.Password, false)
 	if err != nil {
 		http.Error(w, "Failed to set password", http.StatusInternalServerError)
+		return
+	}
+
+	// Create user in DB
+	dbUser := db.User{
+		KeycloakID: userID,
+		Email:      userData.Email,
+		Username:   userData.Username,
+	}
+	if err := db.DB.Create(&dbUser).Error; err != nil {
+		http.Error(w, "Failed to create user in database", http.StatusInternalServerError)
 		return
 	}
 
@@ -151,6 +165,39 @@ func GithubHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	q := r.URL.Query().Get("action")
-	writeJSON(w, map[string]string{"action": q})
+
+	action := r.URL.Query().Get("action")
+	switch action {
+	case "login":
+		// Generate GitHub OAuth URL
+		clientID := os.Getenv("GITHUB_CLIENT_ID")
+		if clientID == "" {
+			clientID = "mock_client_id"
+		}
+		redirectURI := "http://localhost:3000/api/auth/github/callback" // Example
+		scope := "repo,user"
+		url := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=%s", clientID, url.QueryEscape(redirectURI), scope)
+		writeJSON(w, map[string]string{"login_url": url})
+
+	case "list-repo":
+		// Mock list of repos
+		repos := []map[string]string{
+			{"id": "1", "name": "repo1", "full_name": "user/repo1"},
+			{"id": "2", "name": "repo2", "full_name": "user/repo2"},
+		}
+		writeJSON(w, map[string]interface{}{"repos": repos})
+
+	case "detail-repo":
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "Missing id parameter", http.StatusBadRequest)
+			return
+		}
+		// Mock repo details (folders)
+		folders := []string{"src", "docs", "tests"}
+		writeJSON(w, map[string]interface{}{"repo_id": id, "folders": folders})
+
+	default:
+		http.Error(w, "Invalid action", http.StatusBadRequest)
+	}
 }

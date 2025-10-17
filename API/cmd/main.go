@@ -8,10 +8,13 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/flotio-dev/api/pkg/api"
+	"github.com/flotio-dev/api/pkg/db"
 )
 
 func main() {
 	godotenv.Load()
+
+	db.InitDB()
 
 	log.Println("Starting Flotio API server")
 	r := api.Router()

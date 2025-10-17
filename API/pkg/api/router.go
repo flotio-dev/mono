@@ -34,8 +34,10 @@ func Router() http.Handler {
 	// Env routes (by project)
 	protected.HandleFunc("/project/{id}/env", EnvGetHandler).Methods("GET")
 	protected.HandleFunc("/project/{id}/env", EnvPostHandler).Methods("POST")
-	protected.HandleFunc("/project/{id}/env", EnvDeleteHandler).Methods("DELETE")
-	protected.HandleFunc("/project/{id}/env", EnvPutHandler).Methods("PUT")
+	protected.HandleFunc("/project/{id}/envs", EnvGetHandler).Methods("GET")
+	protected.HandleFunc("/project/{id}/env/{envId}", EnvGetByIdHandler).Methods("GET")
+	protected.HandleFunc("/project/{id}/env/{envId}", EnvPutByIdHandler).Methods("PUT")
+	protected.HandleFunc("/project/{id}/env/{envId}", EnvDeleteByIdHandler).Methods("DELETE")
 
 	// Project routes
 	protected.HandleFunc("/project", ProjectsGetHandler).Methods("GET")

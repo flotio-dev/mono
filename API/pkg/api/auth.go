@@ -160,6 +160,20 @@ func MePutHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]string{"status": "updated"})
 }
 
+func GithubCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	// This is a public endpoint for GitHub OAuth callback
+	// It should redirect to the frontend with the code
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		http.Error(w, "Missing code parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Redirect to frontend with the code
+	frontendURL := "http://localhost:3000/auth/github/callback?code=" + code
+	http.Redirect(w, r, frontendURL, http.StatusFound)
+}
+
 func GithubHandler(w http.ResponseWriter, r *http.Request) {
 	userInfo := getUserFromContext(r.Context())
 	if userInfo == nil {

@@ -58,8 +58,10 @@ func ProjectCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Name    string `json:"name"`
-		GitRepo string `json:"git_repo"`
+		Name           string `json:"name"`
+		GitRepo        string `json:"git_repo"`
+		BuildFolder    string `json:"build_folder,omitempty"`
+		FlutterVersion string `json:"flutter_version,omitempty"`
 	}
 	if err := readJSON(r, &req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -67,9 +69,11 @@ func ProjectCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	project := db.Project{
-		Name:    req.Name,
-		GitRepo: req.GitRepo,
-		UserID:  user.ID,
+		Name:           req.Name,
+		GitRepo:        req.GitRepo,
+		BuildFolder:    req.BuildFolder,
+		FlutterVersion: req.FlutterVersion,
+		UserID:         user.ID,
 	}
 
 	if err := db.DB.Create(&project).Error; err != nil {
@@ -120,8 +124,10 @@ func ProjectPutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Name    string `json:"name"`
-		GitRepo string `json:"git_repo"`
+		Name           string `json:"name,omitempty"`
+		GitRepo        string `json:"git_repo,omitempty"`
+		BuildFolder    string `json:"build_folder,omitempty"`
+		FlutterVersion string `json:"flutter_version,omitempty"`
 	}
 	if err := readJSON(r, &req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -138,8 +144,18 @@ func ProjectPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project.Name = req.Name
-	project.GitRepo = req.GitRepo
+	if req.Name != "" {
+		project.Name = req.Name
+	}
+	if req.GitRepo != "" {
+		project.GitRepo = req.GitRepo
+	}
+	if req.BuildFolder != "" {
+		project.BuildFolder = req.BuildFolder
+	}
+	if req.FlutterVersion != "" {
+		project.FlutterVersion = req.FlutterVersion
+	}
 
 	if err := db.DB.Save(&project).Error; err != nil {
 		http.Error(w, "Failed to update project", http.StatusInternalServerError)
@@ -183,6 +199,14 @@ func ProjectBuildHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var req struct {
+		Platform string `json:"platform,omitempty"` // e.g., android, ios
+	}
+	if err := readJSON(r, &req); err != nil {
+		// If no body, use default
+		req.Platform = "android"
+	}
+
 	var project db.Project
 	if err := db.DB.Where("id = ? AND user_id = (SELECT id FROM users WHERE keycloak_id = ?)", projectID, *userInfo.Sub).First(&project).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -196,6 +220,7 @@ func ProjectBuildHandler(w http.ResponseWriter, r *http.Request) {
 	build := db.Build{
 		ProjectID: project.ID,
 		Status:    "pending",
+		Platform:  req.Platform,
 	}
 
 	if err := db.DB.Create(&build).Error; err != nil {
@@ -343,10 +368,10 @@ func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
 	for i, logLine := range logLines {
 		// Store log in DB
 		logEntry := db.Log{
-			BuildID:   uint(buildID),
+			BuildID:    uint(buildID),
 			LineNumber: i + 1,
-			Content:   logLine,
-			Timestamp: time.Now().Unix(),
+			Content:    logLine,
+			Timestamp:  time.Now().Unix(),
 		}
 		if err := db.DB.Create(&logEntry).Error; err != nil {
 			// Log error but continue

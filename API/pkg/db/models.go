@@ -7,31 +7,38 @@ import (
 // User model - additional info beyond Keycloak
 type User struct {
 	gorm.Model
-	KeycloakID string    `gorm:"uniqueIndex" json:"keycloak_id"`
-	Email      string    `gorm:"uniqueIndex" json:"email"`
-	Username   string    `json:"username"`
-	Projects   []Project `gorm:"foreignKey:UserID" json:"projects"`
+	KeycloakID         string    `gorm:"uniqueIndex" json:"keycloak_id"`
+	Email              string    `gorm:"uniqueIndex" json:"email"`
+	Username           string    `json:"username"`
+	GithubAccessToken  string    `json:"github_access_token"`
+	GithubRefreshToken string    `json:"github_refresh_token"`
+	Projects           []Project `gorm:"foreignKey:UserID" json:"projects"`
 }
 
 // Project model
 type Project struct {
 	gorm.Model
-	Name    string  `json:"name"`
-	GitRepo string  `json:"git_repo"`
-	UserID  uint    `json:"user_id"`
-	User    User    `json:"user"`
-	Builds  []Build `gorm:"foreignKey:ProjectID" json:"builds"`
-	Envs    []Env   `gorm:"foreignKey:ProjectID" json:"envs"`
+	Name           string  `json:"name"`
+	GitRepo        string  `json:"git_repo"`
+	BuildFolder    string  `json:"build_folder"`
+	FlutterVersion string  `json:"flutter_version"`
+	UserID         uint    `json:"user_id"`
+	User           User    `json:"user"`
+	Builds         []Build `gorm:"foreignKey:ProjectID" json:"builds"`
+	Envs           []Env   `gorm:"foreignKey:ProjectID" json:"envs"`
 }
 
 // Build model
 type Build struct {
 	gorm.Model
-	ProjectID uint    `json:"project_id"`
-	Project   Project `json:"project"`
-	Status    string  `json:"status"` // pending, running, success, failed
-	APKURL    string  `json:"apk_url"`
-	Logs      []Log   `gorm:"foreignKey:BuildID" json:"logs"`
+	ProjectID   uint    `json:"project_id"`
+	Project     Project `json:"project"`
+	Status      string  `json:"status"`       // pending, running, success, failed
+	Platform    string  `json:"platform"`     // e.g., android, ios
+	ContainerID string  `json:"container_id"` // Kubernetes container ID
+	Duration    int64   `json:"duration"`     // build duration in seconds
+	APKURL      string  `json:"apk_url"`
+	Logs        []Log   `gorm:"foreignKey:BuildID" json:"logs"`
 }
 
 // Log model - stores build logs line by line
@@ -39,7 +46,7 @@ type Log struct {
 	gorm.Model
 	BuildID    uint   `json:"build_id"`
 	Build      Build  `json:"build"`
-	LineNumber  int    `json:"line_number"`
+	LineNumber int    `json:"line_number"`
 	Content    string `json:"content"`
 	Timestamp  int64  `json:"timestamp"` // Unix timestamp
 }

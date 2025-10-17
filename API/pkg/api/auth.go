@@ -90,8 +90,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	realm := os.Getenv("KEYCLOAK_REALM")
 	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
+	clientSecret := os.Getenv("KEYCLOAK_CLIENT_SECRET")
 
-	token, err := client.Login(ctx, clientID, "", realm, creds.Username, creds.Password)
+	log.Printf("Login attempt - Realm: %s, ClientID: %s, Username: %s", realm, clientID, creds.Username)
+
+	token, err := client.Login(ctx, clientID, clientSecret, realm, creds.Username, creds.Password)
 	if err != nil {
 		log.Printf("Login failed for user %s: %v", creds.Username, err)
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)

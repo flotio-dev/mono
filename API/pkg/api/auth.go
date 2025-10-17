@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -72,15 +73,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Login to get token
-	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
-	loginToken, err := client.Login(ctx, clientID, "", realm, userData.Username, userData.Password)
-	if err != nil {
-		http.Error(w, "Failed to login after registration", http.StatusInternalServerError)
-		return
-	}
-
-	writeJSON(w, map[string]string{"token": loginToken.AccessToken})
+	writeJSON(w, map[string]string{"status": "registered", "message": "User registered successfully. Please login."})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +93,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	token, err := client.Login(ctx, clientID, "", realm, creds.Username, creds.Password)
 	if err != nil {
+		log.Printf("Login failed for user %s: %v", creds.Username, err)
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}

@@ -1,27 +1,156 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
+	"os"
+
+	"github.com/Nerzal/gocloak/v13"
 )
+
+func getKeycloakClient() *gocloak.GoCloak {
+	return gocloak.NewClient(os.Getenv("KEYCLOAK_BASE_URL"))
+}
+
+func getAdminToken(ctx context.Context, client *gocloak.GoCloak) (*gocloak.JWT, error) {
+	return client.LoginAdmin(ctx, "admin", "admin", "master")
+}
 
 // Auth handlers
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, map[string]string{"status": "registered"})
+	var userData struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&userData); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	client := getKeycloakClient()
+	ctx := context.Background()
+	token, err := getAdminToken(ctx, client)
+	if err != nil {
+		http.Error(w, "Failed to authenticate with Keycloak", http.StatusInternalServerError)
+		return
+	}
+
+	realm := os.Getenv("KEYCLOAK_REALM")
+
+	// Create user
+	user := &gocloak.User{
+		Username: &userData.Username,
+		Email:    &userData.Email,
+		Enabled:  gocloak.BoolP(true),
+	}
+	userID, err := client.CreateUser(ctx, token.AccessToken, realm, *user)
+	if err != nil {
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
+
+	// Set password
+	err = client.SetPassword(ctx, token.AccessToken, userID, realm, userData.Password, false)
+	if err != nil {
+		http.Error(w, "Failed to set password", http.StatusInternalServerError)
+		return
+	}
+
+	// Login to get token
+	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
+	loginToken, err := client.Login(ctx, clientID, "", realm, userData.Username, userData.Password)
+	if err != nil {
+		http.Error(w, "Failed to login after registration", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string]string{"token": loginToken.AccessToken})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, map[string]string{"status": "logged_in"})
+	var creds struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	client := getKeycloakClient()
+	ctx := context.Background()
+	realm := os.Getenv("KEYCLOAK_REALM")
+	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
+
+	token, err := client.Login(ctx, clientID, "", realm, creds.Username, creds.Password)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	writeJSON(w, map[string]string{"token": token.AccessToken})
 }
 
 func MeGetHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, map[string]string{"user": "me"})
+	userInfo := getUserFromContext(r.Context())
+	if userInfo == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	writeJSON(w, userInfo)
 }
 
 func MePutHandler(w http.ResponseWriter, r *http.Request) {
+	userInfo := getUserFromContext(r.Context())
+	if userInfo == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var updateData struct {
+		Email     *string `json:"email,omitempty"`
+		FirstName *string `json:"firstName,omitempty"`
+		LastName  *string `json:"lastName,omitempty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	client := getKeycloakClient()
+	ctx := context.Background()
+	realm := os.Getenv("KEYCLOAK_REALM")
+
+	adminToken, err := getAdminToken(ctx, client)
+	if err != nil {
+		http.Error(w, "Failed to authenticate with Keycloak", http.StatusInternalServerError)
+		return
+	}
+
+	// Update user
+	userUpdate := &gocloak.User{
+		ID:        userInfo.Sub,
+		Email:     updateData.Email,
+		FirstName: updateData.FirstName,
+		LastName:  updateData.LastName,
+	}
+	err = client.UpdateUser(ctx, adminToken.AccessToken, realm, *userUpdate)
+	if err != nil {
+		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
 	writeJSON(w, map[string]string{"status": "updated"})
 }
 
 func GithubHandler(w http.ResponseWriter, r *http.Request) {
+	if getUserFromContext(r.Context()) == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	q := r.URL.Query().Get("action")
 	writeJSON(w, map[string]string{"action": q})
 }

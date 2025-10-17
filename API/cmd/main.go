@@ -3,17 +3,28 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 
 	"github.com/flotio-dev/api/pkg/api"
 )
 
 func main() {
+	godotenv.Load()
+
 	log.Println("Starting Flotio API server")
 	r := api.Router()
 	log.Println("Router configured")
 
+	port := os.Getenv("API_PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
+
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    addr,
 		Handler: r,
 	}
 

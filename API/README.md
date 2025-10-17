@@ -7,9 +7,6 @@ Files:
 - `go.mod` - Go module for the generated server code.
 - `cmd/main.go` - minimal main to run a generated server stub.
 
-Notes about the Postman-hosted spec:
-
-The URL you provided points to a Postman workspace that requires authentication (401). I couldn't fetch the spec automatically because it requires a Postman account with access. Please export the OpenAPI spec from Postman and drop it here as `openapi.yaml`.
 
 Generating code:
 

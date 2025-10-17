@@ -6,11 +6,7 @@ on:
       - main
     paths:
       - 'front/**'
-      - 'gateway/**'
-      - 'project-service/**'
-      - 'organisation-service/**'
-      - 'logs-service/**'
-      - 'build-service/**'
+      - 'api/**'
 
 env:
   REGISTRY: ghcr.io
@@ -37,16 +33,8 @@ jobs:
           for path in $changed_files; do
             if [[ $path == front/* ]]; then
               services+=("\"front\"")
-            elif [[ $path == gateway/* ]]; then
-              services+=("\"gateway\"")
-            elif [[ $path == project-service/* ]]; then
-              services+=("\"project-service\"")
-            elif [[ $path == organisation-service/* ]]; then
-              services+=("\"organisation-service\"")
-            elif [[ $path == logs-service/* ]]; then
-              services+=("\"logs-service\"")
-            elif [[ $path == build-service/* ]]; then
-              services+=("\"build-service\"")
+            elif [[ $path == api/* ]]; then
+              services+=("\"api\"")
             fi
           done
 

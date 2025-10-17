@@ -55,13 +55,6 @@ func main() {
 		fmt.Printf("Realm '%s' created.\n", realmName)
 	}
 
-	// Ensure client roles exist
-	err = ensureClientRoles(ctx, client, token.AccessToken, realmName)
-	if err != nil {
-		fmt.Printf("Failed to ensure client roles: %v\n", err)
-		os.Exit(1)
-	}
-
 	// Check if client exists
 	clients, err := client.GetClients(ctx, token.AccessToken, realmName, gocloak.GetClientsParams{
 		ClientID: &[]string{"flotio-gateway"}[0],
@@ -92,21 +85,9 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Client flotio-gateway created.")
-
-		// Assign roles to service account
-		err = assignRoles(ctx, client, token.AccessToken, realmName, clientID)
-		if err != nil {
-			fmt.Printf("Failed to assign roles: %v\n", err)
-		}
 	} else {
 		clientID = *clients[0].ID
 		fmt.Println("Client flotio-gateway already exists.")
-
-		// Assign roles if needed
-		err = assignRolesIfNeeded(ctx, client, token.AccessToken, realmName, clientID)
-		if err != nil {
-			fmt.Printf("Failed to assign roles: %v\n", err)
-		}
 	}
 
 	// Get client secret
@@ -137,127 +118,7 @@ func main() {
 		fmt.Printf("Failed to create default user: %v\n", err)
 	}
 
-	// Setup GitHub IDP
-	githubClientID := os.Getenv("GITHUB_CLIENT_ID")
-	githubClientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
-	if githubClientID != "" && githubClientSecret != "" {
-		err = setupGitHubIDP(ctx, client, token.AccessToken, realmName)
-		if err != nil {
-			fmt.Printf("Failed to setup GitHub IDP: %v\n", err)
-		}
-	} else {
-		fmt.Println("GitHub client ID and secret not provided, skipping GitHub setup.")
-	}
-
 	fmt.Println("Setup completed successfully!")
-}
-
-func ensureClientRoles(ctx context.Context, client *gocloak.GoCloak, token, realmName string) error {
-	// Get realm-management client
-	clients, err := client.GetClients(ctx, token, realmName, gocloak.GetClientsParams{
-		ClientID: &[]string{"realm-management"}[0],
-	})
-	if err != nil || len(clients) == 0 {
-		return fmt.Errorf("failed to find realm-management client")
-	}
-	realmMgmtClientID := *clients[0].ID
-
-	roles := []string{"read-token", "view-users"}
-	for _, roleName := range roles {
-		// Check if role exists
-		_, err := client.GetClientRole(ctx, token, realmName, realmMgmtClientID, roleName)
-		if err != nil {
-			// Create role
-			role := &gocloak.Role{
-				Name:        &roleName,
-				Description: &[]string{roleName + " role"}[0],
-			}
-			_, err = client.CreateClientRole(ctx, token, realmName, realmMgmtClientID, *role)
-			if err != nil {
-				return fmt.Errorf("failed to create client role %s: %v", roleName, err)
-			}
-			fmt.Printf("Client role %s created.\n", roleName)
-		}
-	}
-	return nil
-}
-
-func assignRoles(ctx context.Context, client *gocloak.GoCloak, token, realmName, clientID string) error {
-	// Get service account user
-	users, err := client.GetUsers(ctx, token, realmName, gocloak.GetUsersParams{
-		Username: &[]string{"service-account-flotio-gateway"}[0],
-	})
-	if err != nil || len(users) == 0 {
-		return fmt.Errorf("failed to find service account user")
-	}
-	serviceAccountID := *users[0].ID
-	fmt.Printf("SERVICE_ACCOUNT_ID: %s\n", serviceAccountID)
-
-	// Get realm-management client
-	clients, err := client.GetClients(ctx, token, realmName, gocloak.GetClientsParams{
-		ClientID: &[]string{"realm-management"}[0],
-	})
-	if err != nil || len(clients) == 0 {
-		return fmt.Errorf("failed to find realm-management client")
-	}
-	realmMgmtClientID := *clients[0].ID
-
-	// Get roles
-	readTokenRole, err := client.GetClientRole(ctx, token, realmName, realmMgmtClientID, "read-token")
-	if err != nil {
-		return err
-	}
-	viewUsersRole, err := client.GetClientRole(ctx, token, realmName, realmMgmtClientID, "view-users")
-	if err != nil {
-		return err
-	}
-
-	roles := []gocloak.Role{*readTokenRole, *viewUsersRole}
-	err = client.AddClientRolesToUser(ctx, token, realmName, realmMgmtClientID, serviceAccountID, roles)
-	if err != nil {
-		return fmt.Errorf("failed to assign roles: %v", err)
-	}
-	fmt.Println("Client roles assigned to service account.")
-	return nil
-}
-
-func assignRolesIfNeeded(ctx context.Context, client *gocloak.GoCloak, token, realmName, clientID string) error {
-	// Get service account user
-	users, err := client.GetUsers(ctx, token, realmName, gocloak.GetUsersParams{
-		Username: &[]string{"service-account-flotio-gateway"}[0],
-	})
-	if err != nil || len(users) == 0 {
-		return fmt.Errorf("failed to find service account user")
-	}
-	serviceAccountID := *users[0].ID
-	fmt.Printf("SERVICE_ACCOUNT_ID: %s\n", serviceAccountID)
-
-	// Get realm-management client
-	clients, err := client.GetClients(ctx, token, realmName, gocloak.GetClientsParams{
-		ClientID: &[]string{"realm-management"}[0],
-	})
-	if err != nil || len(clients) == 0 {
-		return fmt.Errorf("failed to find realm-management client")
-	}
-	realmMgmtClientID := *clients[0].ID
-
-	// Get roles
-	readTokenRole, err := client.GetClientRole(ctx, token, realmName, realmMgmtClientID, "read-token")
-	if err != nil {
-		return err
-	}
-	viewUsersRole, err := client.GetClientRole(ctx, token, realmName, realmMgmtClientID, "view-users")
-	if err != nil {
-		return err
-	}
-
-	roles := []gocloak.Role{*readTokenRole, *viewUsersRole}
-	err = client.AddClientRolesToUser(ctx, token, realmName, realmMgmtClientID, serviceAccountID, roles)
-	if err != nil {
-		return fmt.Errorf("failed to assign roles: %v", err)
-	}
-	fmt.Println("Roles assigned to service account.")
-	return nil
 }
 
 func writeEnvFile(realmName, clientID, clientSecret, baseURL string) error {
@@ -312,43 +173,5 @@ func createDefaultUser(ctx context.Context, client *gocloak.GoCloak, token, real
 		return fmt.Errorf("failed to set password: %v", err)
 	}
 	fmt.Println("Password set for default user.")
-	return nil
-}
-
-func setupGitHubIDP(ctx context.Context, client *gocloak.GoCloak, token, realmName string) error {
-	// Check if GitHub IDP exists
-	idps, err := client.GetIdentityProviders(ctx, token, realmName)
-	if err != nil {
-		return err
-	}
-	for _, idp := range idps {
-		if *idp.Alias == "github" {
-			fmt.Println("GitHub identity provider already exists.")
-			return nil
-		}
-	}
-
-	// Create GitHub IDP
-	idp := &gocloak.IdentityProviderRepresentation{
-		Alias:                    &[]string{"github"}[0],
-		DisplayName:              &[]string{"GitHub"}[0],
-		ProviderID:               &[]string{"github"}[0],
-		Enabled:                  &[]bool{true}[0],
-		TrustEmail:               &[]bool{true}[0],
-		StoreToken:               &[]bool{true}[0],
-		AddReadTokenRoleOnCreate: &[]bool{true}[0],
-		Config: &map[string]string{
-			"clientId":     os.Getenv("GITHUB_CLIENT_ID"),
-			"clientSecret": os.Getenv("GITHUB_CLIENT_SECRET"),
-			"useJwksUrl":   "true",
-			"storeToken":   "true",
-		},
-	}
-
-	_, err = client.CreateIdentityProvider(ctx, token, realmName, *idp)
-	if err != nil {
-		return fmt.Errorf("failed to create GitHub IDP: %v", err)
-	}
-	fmt.Println("GitHub identity provider created.")
 	return nil
 }

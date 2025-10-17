@@ -25,7 +25,7 @@ jobs:
         id: list
         run: |
           # Compare current commit with previous one on main
-          changed_files=$(git diff --name-only HEAD~1 HEAD)
+          changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }})
           echo "Changed files:"
           echo "$changed_files"
 

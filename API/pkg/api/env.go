@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/flotio-dev/api/pkg/db"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
-	"github.com/flotio-dev/api/pkg/db"
 )
 
 // Env handlers

@@ -1,6 +1,6 @@
 # Makefile for Flotio development environment
 
-.PHONY: help up down setup env gateway front project-service organization-service devenv clean
+.PHONY: help up down setup env api front devenv clean
 
 # Default target
 help:
@@ -9,10 +9,8 @@ help:
 	@echo "  down            - Stop Docker Compose services"
 	@echo "  setup           - Setup Keycloak realm and client"
 	@echo "  env             - Copy .env.example files to .env files"
-	@echo "  gateway         - Run the gateway service"
+	@echo "  api             - Run the API service"
 	@echo "  front           - Run the frontend service"
-	@echo "  project-service - Run the project service"
-	@echo "  organization-service - Run the organization service"
 	@echo "  devenv          - Enter devenv shell"
 	@echo "  clean           - Clean up containers and volumes"
 
@@ -36,17 +34,11 @@ env:
 	cp project-service/.env.example project-service/.env
 
 # Run services
-gateway:
-	cd gateway && go run cmd/main.go
+api:
+	cd API && go run cmd/main.go
 
 front:
 	cd front && pnpm dev
-
-project-service:
-	cd project-service && go run cmd/main.go
-
-organization-service:
-	cd organization-service && go run cmd/main.go
 
 # Devenv
 devenv:

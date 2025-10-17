@@ -29,12 +29,8 @@ in
   };
 
   processes = {
-    gateway.exec = "cd gateway && go run cmd/main.go";
+    api.exec = "cd API && go run cmd/main.go";
     front.exec = "cd front && pnpm dev";
-    "project-service".exec = "cd project-service && go run cmd/main.go";
-    "organization-service".exec = "cd organization-service && go run cmd/main.go";
-    "build-service".exec = "cd build-service && go run cmd/main.go";
-    "logs-service".exec = "cd logs-service && go run cmd/main.go";
   };
 
   env = {
@@ -56,8 +52,5 @@ in
 
     # Service URLs
     NEXT_PUBLIC_GATEWAY_BASE_URL = "http://localhost:8080";
-    NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL = "http://localhost:8082";
-    NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL = "http://localhost:8083";
-
   };
 }

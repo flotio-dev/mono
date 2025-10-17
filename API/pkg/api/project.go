@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/flotio-dev/api/pkg/db"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
-	"github.com/flotio-dev/api/pkg/db"
 )
 
 // Projects

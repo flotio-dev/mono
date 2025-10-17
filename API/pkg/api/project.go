@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -287,17 +288,19 @@ func BuildLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var build db.Build
-	if err := db.DB.Joins("JOIN projects ON builds.project_id = projects.id").Where("builds.id = ? AND projects.id = ? AND projects.user_id = (SELECT id FROM users WHERE keycloak_id = ?)", buildID, projectID, *userInfo.Sub).First(&build).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			http.Error(w, "Build not found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "Failed to fetch build", http.StatusInternalServerError)
+	var logs []db.Log
+	if err := db.DB.Joins("JOIN builds ON logs.build_id = builds.id").Joins("JOIN projects ON builds.project_id = projects.id").Where("logs.build_id = ? AND projects.id = ? AND projects.user_id = (SELECT id FROM users WHERE keycloak_id = ?)", buildID, projectID, *userInfo.Sub).Order("logs.line_number ASC").Find(&logs).Error; err != nil {
+		http.Error(w, "Failed to fetch logs", http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"logs": build.Logs})
+	// Convert to simple string array for backward compatibility
+	logLines := make([]string, len(logs))
+	for i, log := range logs {
+		logLines[i] = log.Content
+	}
+
+	writeJSON(w, map[string]interface{}{"logs": logLines})
 }
 
 func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
@@ -318,6 +321,13 @@ func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	vars := mux.Vars(r)
+	buildID, err := strconv.Atoi(vars["buildId"])
+	if err != nil {
+		http.Error(w, "Invalid build ID", http.StatusBadRequest)
+		return
+	}
+
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool { return true }, // Allow all origins for demo
 	}
@@ -328,10 +338,22 @@ func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Simulate sending logs
-	logs := []string{"Starting build...", "Compiling...", "Build successful!"}
-	for _, log := range logs {
-		err := conn.WriteMessage(websocket.TextMessage, []byte(log))
+	// Simulate sending logs and store them
+	logLines := []string{"Starting build...", "Compiling...", "Build successful!"}
+	for i, logLine := range logLines {
+		// Store log in DB
+		logEntry := db.Log{
+			BuildID:   uint(buildID),
+			LineNumber: i + 1,
+			Content:   logLine,
+			Timestamp: time.Now().Unix(),
+		}
+		if err := db.DB.Create(&logEntry).Error; err != nil {
+			// Log error but continue
+			fmt.Printf("Failed to store log: %v\n", err)
+		}
+
+		err := conn.WriteMessage(websocket.TextMessage, []byte(logLine))
 		if err != nil {
 			break
 		}

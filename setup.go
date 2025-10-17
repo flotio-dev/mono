@@ -105,7 +105,16 @@ func main() {
 	}
 
 	// Write env file
-	err = writeEnvFile(realmName, *clientDetails.ClientID, *secret.Value, keycloakBaseURL)
+	// Collect additional env values with sensible defaults
+	databaseURL := getEnvWithDefault("DATABASE_URL", "postgres://flotio:flotio@localhost:5432/flotio?sslmode=disable")
+	apiPort := getEnvWithDefault("API_PORT", "8080")
+	githubClientID := getEnvWithDefault("GITHUB_CLIENT_ID", "xxx")
+	githubClientSecret := getEnvWithDefault("GITHUB_CLIENT_SECRET", "xxxx")
+	nextPublicGateway := getEnvWithDefault("NEXT_PUBLIC_GATEWAY_BASE_URL", "http://localhost:8080")
+	nextPublicOrg := getEnvWithDefault("NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL", "http://localhost:8082")
+	nextPublicProject := getEnvWithDefault("NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL", "http://localhost:8083")
+
+	err = writeEnvFile(realmName, *clientDetails.ClientID, *secret.Value, keycloakBaseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject)
 	if err != nil {
 		fmt.Printf("Failed to write env file: %v\n", err)
 	} else {
@@ -121,21 +130,52 @@ func main() {
 	fmt.Println("Setup completed successfully!")
 }
 
-func writeEnvFile(realmName, clientID, clientSecret, baseURL string) error {
-	envContent := fmt.Sprintf(`KEYCLOAK_REALM=%s
+func writeEnvFile(realmName, clientID, clientSecret, baseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject string) error {
+	// Create API env content
+	apiEnv := fmt.Sprintf(`KEYCLOAK_REALM=%s
 KEYCLOAK_CLIENT_ID=%s
 KEYCLOAK_CLIENT_SECRET=%s
 KEYCLOAK_ID=%s
 KEYCLOAK_SECRET=%s
 KEYCLOAK_BASE_URL=%s
 KEYCLOAK_ISSUER=%s/realms/%s
-`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName)
 
-	err := os.WriteFile("front/.env", []byte(envContent), 0644)
-	if err != nil {
+# API Configuration
+API_PORT=%s
+GITHUB_CLIENT_ID=%s
+GITHUB_CLIENT_SECRET=%s
+
+# Database Configuration
+DATABASE_URL=%s
+`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, apiPort, githubClientID, githubClientSecret, databaseURL)
+
+	// Create front env content
+	frontEnv := fmt.Sprintf(`KEYCLOAK_REALM=%s
+KEYCLOAK_CLIENT_ID=%s
+KEYCLOAK_CLIENT_SECRET=%s
+KEYCLOAK_ID=%s
+KEYCLOAK_SECRET=%s
+KEYCLOAK_BASE_URL=%s
+KEYCLOAK_ISSUER=%s/realms/%s
+
+# Gateway Configuration
+NEXT_PUBLIC_GATEWAY_BASE_URL=%s
+NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL=%s
+NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL=%s
+`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, nextPublicGateway, nextPublicOrg, nextPublicProject)
+
+	// Write front/.env
+	if err := os.WriteFile("front/.env", []byte(frontEnv), 0644); err != nil {
 		return fmt.Errorf("failed to write front/.env file: %v", err)
 	}
+
+	// Write API/.env
+	if err := os.WriteFile("API/.env", []byte(apiEnv), 0644); err != nil {
+		return fmt.Errorf("failed to write API/.env file: %v", err)
+	}
+
 	fmt.Println("front/.env file written.")
+	fmt.Println("API/.env file written.")
 	return nil
 }
 

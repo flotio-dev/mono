@@ -21,17 +21,15 @@ up:
 down:
 	docker-compose down
 
-# Setup Keycloak
+# Setup .env and keycloak
 setup:
-	go run setup-keycloak.go
+	go run setup.go
 
 # Setup environment files
 env:
 	cp .env.example .env
 	cp front/.env.example front/.env
-	cp gateway/.env.example gateway/.env
-	cp organization-service/.env.example organization-service/.env
-	cp project-service/.env.example project-service/.env
+	cp API/.env.example API/.env
 
 # Run services
 api:

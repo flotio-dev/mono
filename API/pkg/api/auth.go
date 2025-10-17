@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/flotio-dev/api/pkg/db"
@@ -19,6 +21,27 @@ func getKeycloakClient() *gocloak.GoCloak {
 
 func getAdminToken(ctx context.Context, client *gocloak.GoCloak) (*gocloak.JWT, error) {
 	return client.LoginAdmin(ctx, "admin", "admin", "master")
+}
+
+// seededRand is a package-level RNG seeded once
+var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+// genRandomName returns a realistic-looking first and last name.
+// It picks randomly from small predefined lists; this keeps tests stable
+// and avoids adding external resources.
+func genRandomName() (first, last string) {
+	firstNames := []string{
+		"Alice", "Bob", "Caroline", "David", "Emma", "Frank", "Grace", "Hugo", "Iris", "Julien",
+		"Lucas", "Maya", "Noah", "Olivia", "Paul", "Quentin", "Romain", "Sophie", "Thomas", "Victor",
+	}
+	lastNames := []string{
+		"Martin", "Bernard", "Dubois", "Leroy", "Moreau", "Faure", "Rousseau", "Garnier", "Laurent", "Petit",
+		"Lambert", "Dupont", "Simon", "Michel", "Garcia", "David", "Bertrand", "Morel", "Robin", "Leclerc",
+	}
+
+	first = firstNames[seededRand.Intn(len(firstNames))]
+	last = lastNames[seededRand.Intn(len(lastNames))]
+	return
 }
 
 // Auth handlers
@@ -44,16 +67,26 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	realm := os.Getenv("KEYCLOAK_REALM")
 
 	// Create user
+	// Ensure required actions are empty so the account is considered fully set up
+	// (avoids Keycloak returning "Account is not fully set up" on direct grant)
+	requiredActions := []string{}
+	firstName, lastName := genRandomName()
 	user := &gocloak.User{
-		Username: &userData.Username,
-		Email:    &userData.Email,
-		Enabled:  gocloak.BoolP(true),
+		Username:        &userData.Username,
+		Email:           &userData.Email,
+		FirstName:       gocloak.StringP(firstName),
+		LastName:        gocloak.StringP(lastName),
+		Enabled:         gocloak.BoolP(true),
+		EmailVerified:   gocloak.BoolP(true),
+		RequiredActions: &requiredActions,
 	}
 	userID, err := client.CreateUser(ctx, token.AccessToken, realm, *user)
 	if err != nil {
+		log.Printf("CreateUser failed for %s: %v", userData.Username, err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("Created Keycloak user: %s (username=%s)", userID, userData.Username)
 
 	// Set password
 	err = client.SetPassword(ctx, token.AccessToken, userID, realm, userData.Password, false)
@@ -73,7 +106,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]string{"status": "registered", "message": "User registered successfully. Please login."})
+	// After successful registration, perform a direct login to return the same response as LoginHandler
+	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
+	clientSecret := os.Getenv("KEYCLOAK_CLIENT_SECRET")
+
+	tokenResp, err := client.Login(ctx, clientID, clientSecret, realm, userData.Username, userData.Password)
+	if err != nil {
+		// If login fails for any reason, fall back to returning a registration success message
+		log.Printf("Auto-login failed for %s: %v", userData.Username, err)
+		writeJSON(w, map[string]string{"status": "registered", "message": "User registered successfully. Please login."})
+		return
+	}
+
+	writeJSON(w, map[string]string{"token": tokenResp.AccessToken})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -122,9 +167,8 @@ func MePutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var updateData struct {
-		Email     *string `json:"email,omitempty"`
-		FirstName *string `json:"firstName,omitempty"`
-		LastName  *string `json:"lastName,omitempty"`
+		Email    *string `json:"email,omitempty"`
+		Username *string `json:"username,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -143,14 +187,34 @@ func MePutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Update user
 	userUpdate := &gocloak.User{
-		ID:        userInfo.Sub,
-		Email:     updateData.Email,
-		FirstName: updateData.FirstName,
-		LastName:  updateData.LastName,
+		ID:       userInfo.Sub,
+		Email:    updateData.Email,
+		Username: updateData.Username,
 	}
 	err = client.UpdateUser(ctx, adminToken.AccessToken, realm, *userUpdate)
 	if err != nil {
 		http.Error(w, "Failed to update user", http.StatusInternalServerError)
+		return
+	}
+
+	// Persist changes to local DB as well (e.g., email)
+	var dbUser db.User
+	if err := db.DB.Where("keycloak_id = ?", *userInfo.Sub).First(&dbUser).Error; err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	if updateData.Email != nil {
+		dbUser.Email = *updateData.Email
+	}
+	// Note: first/last name are stored in Keycloak; update local username only if desired.
+	if updateData.Username != nil {
+		// Optionally update username from first name if the app uses it; keep current username by default.
+		dbUser.Username = *updateData.Username
+	}
+
+	if err := db.DB.Save(&dbUser).Error; err != nil {
+		http.Error(w, "Failed to update user in database", http.StatusInternalServerError)
 		return
 	}
 

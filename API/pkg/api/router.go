@@ -1,9 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+
+	v1 "github.com/flotio-dev/api/pkg/api/v1"
 )
 
 func Router() http.Handler {
@@ -53,6 +57,11 @@ func Router() http.Handler {
 	protected.HandleFunc("/project/{id}/build/{buildId}/logs", BuildLogsHandler).Methods("GET")
 	protected.HandleFunc("/project/{id}/build/{buildId}/logs/ws", BuildLogsWSHandler).Methods("GET")
 	protected.HandleFunc("/project/{id}/build/{buildId}/download", BuildDownloadHandler).Methods("GET")
+
+	// Github routes
+	fmt.Printf("Webhook secret: '%s'\n", os.Getenv("GITHUB_WEBHOOK_SECRET"))
+	githubController := v1.NewGithubController([]byte(os.Getenv("GITHUB_WEBHOOK_SECRET")))
+	protected.HandleFunc("/github/webhooks", githubController.HandleWebhook)
 
 	return r
 }

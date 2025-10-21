@@ -13,6 +13,9 @@ type User struct {
 	GithubAccessToken  string    `json:"github_access_token"`
 	GithubRefreshToken string    `json:"github_refresh_token"`
 	Projects           []Project `gorm:"foreignKey:UserID" json:"projects"`
+
+	// Relation avec GithubInstallation
+	GithubInstallation *GithubInstallation `gorm:"foreignKey:UserID"`
 }
 
 // Project model
@@ -58,4 +61,26 @@ type Env struct {
 	Project   Project `json:"project"`
 	Key       string  `json:"key"`
 	Value     string  `json:"value"`
+}
+
+type Organization struct {
+	gorm.Model
+	Name                   string `json:"name" gorm:"not null;uniqueIndex"`
+	KeycloakOrganizationID int64  `json:"keycloak_organization_id" gorm:"not null;uniqueIndex"`
+	Description            string `json:"description,omitempty"`
+
+	// Relation avec GithubInstallation
+	GithubInstallation *GithubInstallation `gorm:"foreignKey:OrganizationID"`
+}
+
+type GithubInstallation struct {
+	gorm.Model
+
+	GithubInstallationID int64 `json:"github_installation_id" gorm:"not null;uniqueIndex"`
+
+	UserID *uint `json:"user_id,omitempty" gorm:"unique"`
+	User   *User
+
+	OrganizationID *uint `json:"organization_id,omitempty" gorm:"unique"`
+	Organization   *Organization
 }

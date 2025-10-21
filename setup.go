@@ -113,8 +113,10 @@ func main() {
 	nextPublicGateway := getEnvWithDefault("NEXT_PUBLIC_GATEWAY_BASE_URL", "http://localhost:8080")
 	nextPublicOrg := getEnvWithDefault("NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL", "http://localhost:8082")
 	nextPublicProject := getEnvWithDefault("NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL", "http://localhost:8083")
+	githubWebhookSecret := getEnvWithDefault("GITHUB_WEBHOOK_SECRET", "secret")
+	nextPublicGithubApp := getEnvWithDefault("NEXT_PUBLIC_GITHUB_APP", "app")
 
-	err = writeEnvFile(realmName, *clientDetails.ClientID, *secret.Value, keycloakBaseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject)
+	err = writeEnvFile(realmName, *clientDetails.ClientID, *secret.Value, keycloakBaseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject, githubWebhookSecret, nextPublicGithubApp)
 	if err != nil {
 		fmt.Printf("Failed to write env file: %v\n", err)
 	} else {
@@ -130,7 +132,7 @@ func main() {
 	fmt.Println("Setup completed successfully!")
 }
 
-func writeEnvFile(realmName, clientID, clientSecret, baseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject string) error {
+func writeEnvFile(realmName, clientID, clientSecret, baseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject, githubWebhookSecret, nextPublicGithubApp string) error {
 	// Create API env content
 	apiEnv := fmt.Sprintf(`KEYCLOAK_REALM=%s
 KEYCLOAK_CLIENT_ID=%s
@@ -147,7 +149,8 @@ GITHUB_CLIENT_SECRET=%s
 
 # Database Configuration
 DATABASE_URL=%s
-`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, apiPort, githubClientID, githubClientSecret, databaseURL)
+GITHUB_WEBHOOK_SECRET=%s
+`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, apiPort, githubClientID, githubClientSecret, databaseURL, githubWebhookSecret)
 
 	// Create front env content
 	frontEnv := fmt.Sprintf(`KEYCLOAK_REALM=%s
@@ -162,7 +165,8 @@ KEYCLOAK_ISSUER=%s/realms/%s
 NEXT_PUBLIC_GATEWAY_BASE_URL=%s
 NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL=%s
 NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL=%s
-`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, nextPublicGateway, nextPublicOrg, nextPublicProject)
+NEXT_PUBLIC_GITHUB_APP=%s
+`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, nextPublicGateway, nextPublicOrg, nextPublicProject, nextPublicGithubApp)
 
 	// Write front/.env
 	if err := os.WriteFile("front/.env", []byte(frontEnv), 0644); err != nil {

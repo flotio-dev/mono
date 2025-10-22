@@ -1,4 +1,4 @@
-package api
+package utils
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func writeJSON(w http.ResponseWriter, v interface{}) {
+func WriteJSON(w http.ResponseWriter, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(v); err != nil {
 		log.Printf("Error encoding JSON: %v", err)
@@ -14,6 +14,6 @@ func writeJSON(w http.ResponseWriter, v interface{}) {
 	}
 }
 
-func readJSON(r *http.Request, v interface{}) error {
+func ReadJSON(r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }

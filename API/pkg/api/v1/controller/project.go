@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"context"
@@ -12,11 +12,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
+
+	middleware "github.com/flotio-dev/api/pkg/api/v1/middleware"
+	utils "github.com/flotio-dev/api/pkg/utils"
 )
 
 // Projects
 func ProjectsGetHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -38,10 +41,10 @@ func ProjectsGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"projects": projects})
+	utils.WriteJSON(w, map[string]interface{}{"projects": projects})
 }
 func ProjectCreateHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -63,7 +66,7 @@ func ProjectCreateHandler(w http.ResponseWriter, r *http.Request) {
 		BuildFolder    string `json:"build_folder,omitempty"`
 		FlutterVersion string `json:"flutter_version,omitempty"`
 	}
-	if err := readJSON(r, &req); err != nil {
+	if err := utils.ReadJSON(r, &req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -81,10 +84,10 @@ func ProjectCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"project": project})
+	utils.WriteJSON(w, map[string]interface{}{"project": project})
 }
 func ProjectGetHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -107,10 +110,10 @@ func ProjectGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"project": project})
+	utils.WriteJSON(w, map[string]interface{}{"project": project})
 }
 func ProjectPutHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -129,7 +132,7 @@ func ProjectPutHandler(w http.ResponseWriter, r *http.Request) {
 		BuildFolder    string `json:"build_folder,omitempty"`
 		FlutterVersion string `json:"flutter_version,omitempty"`
 	}
-	if err := readJSON(r, &req); err != nil {
+	if err := utils.ReadJSON(r, &req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -162,10 +165,10 @@ func ProjectPutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"project": project})
+	utils.WriteJSON(w, map[string]interface{}{"project": project})
 }
 func ProjectDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -183,10 +186,10 @@ func ProjectDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]string{"status": "deleted"})
+	utils.WriteJSON(w, map[string]string{"status": "deleted"})
 }
 func ProjectBuildHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -202,7 +205,7 @@ func ProjectBuildHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Platform string `json:"platform,omitempty"` // e.g., android, ios
 	}
-	if err := readJSON(r, &req); err != nil {
+	if err := utils.ReadJSON(r, &req); err != nil {
 		// If no body, use default
 		req.Platform = "android"
 	}
@@ -230,11 +233,11 @@ func ProjectBuildHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Start actual build process
 
-	writeJSON(w, map[string]interface{}{"build": build})
+	utils.WriteJSON(w, map[string]interface{}{"build": build})
 }
 
 func BuildCancelHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -268,11 +271,11 @@ func BuildCancelHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"build": build})
+	utils.WriteJSON(w, map[string]interface{}{"build": build})
 }
 
 func BuildsListHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -291,11 +294,11 @@ func BuildsListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]interface{}{"builds": builds})
+	utils.WriteJSON(w, map[string]interface{}{"builds": builds})
 }
 
 func BuildLogsHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -325,7 +328,7 @@ func BuildLogsHandler(w http.ResponseWriter, r *http.Request) {
 		logLines[i] = log.Content
 	}
 
-	writeJSON(w, map[string]interface{}{"logs": logLines})
+	utils.WriteJSON(w, map[string]interface{}{"logs": logLines})
 }
 
 func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
@@ -337,7 +340,7 @@ func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate token (simplified, in real app use proper validation)
-	client := getKeycloakClient()
+	client := utils.GetKeycloakClient()
 	ctx := context.Background()
 	realm := os.Getenv("KEYCLOAK_REALM")
 	_, err := client.GetUserInfo(ctx, token, realm)
@@ -387,7 +390,7 @@ func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func BuildDownloadHandler(w http.ResponseWriter, r *http.Request) {
-	if getUserFromContext(r.Context()) == nil {
+	if middleware.GetUserFromContext(r.Context()) == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

@@ -19,6 +19,9 @@ func getEnvWithDefault(key, defaultValue string) string {
 func main() {
 	godotenv.Load()
 
+	fmt.Println("Env GITHUB_WEBHOOK_SECRET =", os.Getenv("GITHUB_WEBHOOK_SECRET"))
+	fmt.Println("Env NEXT_PUBLIC_GITHUB_APP =", os.Getenv("NEXT_PUBLIC_GITHUB_APP"))
+
 	// Configuration
 	keycloakBaseURL := getEnvWithDefault("KEYCLOAK_BASE_URL", "http://localhost:8081")
 	realmName := getEnvWithDefault("KEYCLOAK_REALM", "flotio")
@@ -149,6 +152,8 @@ GITHUB_CLIENT_SECRET=%s
 
 # Database Configuration
 DATABASE_URL=%s
+
+# Github Configuration
 GITHUB_WEBHOOK_SECRET=%s
 `, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, apiPort, githubClientID, githubClientSecret, databaseURL, githubWebhookSecret)
 
@@ -165,6 +170,8 @@ KEYCLOAK_ISSUER=%s/realms/%s
 NEXT_PUBLIC_GATEWAY_BASE_URL=%s
 NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL=%s
 NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL=%s
+
+# Github Configuration
 NEXT_PUBLIC_GITHUB_APP=%s
 `, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, nextPublicGateway, nextPublicOrg, nextPublicProject, nextPublicGithubApp)
 

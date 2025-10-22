@@ -1,4 +1,4 @@
-package api
+package middleware
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Nerzal/gocloak/v13"
+	utils "github.com/flotio-dev/api/pkg/utils"
 )
 
 type contextKey string
@@ -21,7 +22,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 		token := authHeader[7:]
 
-		client := getKeycloakClient()
+		client := utils.GetKeycloakClient()
 		ctx := context.Background()
 		realm := os.Getenv("KEYCLOAK_REALM")
 
@@ -40,7 +41,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getUserFromContext(ctx context.Context) *gocloak.UserInfo {
+func GetUserFromContext(ctx context.Context) *gocloak.UserInfo {
 	if user, ok := ctx.Value(userContextKey).(*gocloak.UserInfo); ok {
 		return user
 	}

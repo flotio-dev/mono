@@ -46,17 +46,46 @@
     "recent_activity": "Recent activity",
     "changelog": "Changelog"
   },
-  "listing_projects":{
+  "listing_projects": {
     "projects": "Projects",
     "create_project": "Create a Project",
     "recent_activity": "Recent activity"
+  },
+  "add_project": {
+    "title": "Create a Project",
+    "back_to_list": "← Back to projects",
+    "steps": {
+      "name": "Project name",
+      "github": "Connect to GitHub",
+      "repo": "Choose repository",
+      "flutter": "Flutter version",
+      "summary": "Summary"
+    },
+    "fields": {
+      "project_name": "Project name",
+      "repo": "Repository",
+      "build_path": "Build folder",
+      "flutter_version": "Flutter version"
+    },
+    "actions": {
+      "yes_github": "Yes, connect GitHub",
+      "no_github": "No",
+      "back": "Back",
+      "next": "Next",
+      "create": "Create project"
+    },
+    "errors": {
+      "name_required": "Project name is required",
+      "repo_required": "Please select a repository",
+      "flutter_required": "Please choose a Flutter version"
+    }
   },
   "organization": {
     "organization_name": "Organization name",
     "organisation_info": "Organization informations",
     "add_organization": "Add organization",
-    "users_in_organization": "Users in organization", 
-    "add_user": "Add user", 
+    "users_in_organization": "Users in organization",
+    "add_user": "Add user",
     "user": "User",
     "add": "Add",
     "admin": "Admin",
@@ -102,5 +131,59 @@
     "new_organization": "New organization",
     "add_organization": "Add organization",
     "close": "Close"
+  },
+  "project_page": {
+    "projects": "Projects",
+    "overview": "Overview",
+    "last_activity": "Last activity",
+    "last_activity_description": "Last activity description",
+    "total_builds": "Total builds",
+    "success": "Success",
+    "failed": "Failed",
+    "running": "Running",
+    "builds": "Recent builds",
+    "view_all": "View all",
+    "no_builds_yet": "No builds yet",
+    "status": "Status",
+    "start": "Start",
+    "end": "End",
+    "description": "Description",
+    "actions": "Actions",
+    "settings": "Settings",
+    "edit_project": "Edit project",
+    "environment": "Environment",
+    "environment_variables": "Environment Variables",
+    "api_keys": "API Keys",
+    "members": "Members",
+    "env_name": "Environment name",
+    "production_url": "Production URL",
+    "staging_url": "Staging URL",
+    "save": "Save",
+    "cancel": "Cancel",
+    "key": "Key",
+    "value": "Value",
+    "add_variable": "Add variable",
+    "existing_variables": "Existing variables",
+    "key_name": "Key name",
+    "key_description": "Key for CI",
+    "generate": "Generate",
+    "existing_keys": "Existing keys",
+    "name": "Name",
+    "last_used": "Last used",
+    "invite_member": "Invite member",
+    "send_invite": "Send invitation",
+    "project_members": "Project members",
+    "member": "Member",
+    "role": "Role",
+    "organization": "Organization",
+    "user": "User",
+    "created_at": "Created at",
+    "build_route": "Build route",
+    "start_build": "Start build",
+    "build_settings": "Build settings",
+    "provider": "Provider",
+    "branch": "Branch",
+    "command": "Command",
+    "output_dir": "Output directory"
   }
 }

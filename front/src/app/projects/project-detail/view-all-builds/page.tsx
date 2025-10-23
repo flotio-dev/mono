@@ -16,10 +16,12 @@ import {
   Avatar,
   Breadcrumbs,
   Link as MUILink,
+  InputAdornment,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import SearchIcon from "@mui/icons-material/Search";
 import Menu from "../../../components/Menu";
 import { useEffect, useState } from "react";
 import { getTranslations } from "../../../../lib/clientTranslations";
@@ -67,27 +69,58 @@ const mockBuilds: BuildItem[] = [
     commit: "8cdd761",
   },
 ];
+
 /*******************
  * Locale helpers
  *******************/
 const getPreferredLocale = (p?: string | null) => {
   try {
     const stored =
-      typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
-    if (stored === 'en' || stored === 'fr') return stored;
+      typeof window !== "undefined" ? localStorage.getItem("lang") : null;
+    if (stored === "en" || stored === "fr") return stored;
   } catch { }
-  if (!p) return 'fr';
-  const parts = p.split('/');
+  if (!p) return "fr";
+  const parts = p.split("/");
   const candidate = parts[1];
-  if (candidate === 'en' || candidate === 'fr') return candidate;
-  return 'fr';
+  if (candidate === "en" || candidate === "fr") return candidate;
+  return "fr";
 };
 
-function StatusChip({ status, t }: { status: BuildItem["status"]; t: (k: string) => string }) {
+const formatDate = (iso: string, locale: string) => {
+  try {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(d);
+  } catch {
+    return iso;
+  }
+};
+
+function StatusChip({
+  status,
+  t,
+}: {
+  status: BuildItem["status"];
+  t: (k: string) => string;
+}) {
   const map = {
-    success: { icon: <CheckCircleIcon fontSize="small" />, color: "success", label: t("project_page.success") },
-    failed: { icon: <CancelIcon fontSize="small" />, color: "error", label: t("project_page.failed") },
-    running: { icon: <ScheduleIcon fontSize="small" />, color: "default", label: t("project_page.running") },
+    success: {
+      icon: <CheckCircleIcon fontSize="small" />,
+      color: "success",
+      label: t("project_page.success"),
+    },
+    failed: {
+      icon: <CancelIcon fontSize="small" />,
+      color: "error",
+      label: t("project_page.failed"),
+    },
+    running: {
+      icon: <ScheduleIcon fontSize="small" />,
+      color: "default",
+      label: t("project_page.running"),
+    },
   };
   const { icon, color, label } = map[status];
   return <Chip icon={icon} label={label} color={color as any} size="small" />;
@@ -95,9 +128,12 @@ function StatusChip({ status, t }: { status: BuildItem["status"]; t: (k: string)
 
 export default function BuildListPage() {
   const [filter, setFilter] = useState("");
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : "/";
   const [locale, setLocale] = useState(() => getPreferredLocale(pathname));
-  const [translations, setTranslations] = useState<Record<string, any> | null>(null);
+  const [translations, setTranslations] = useState<Record<string, any> | null>(
+    null
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -110,18 +146,21 @@ export default function BuildListPage() {
     const onLocaleChanged = (e: any) => {
       const newLoc =
         e?.detail ??
-        (typeof window !== 'undefined' ? localStorage.getItem('lang') : null);
+        (typeof window !== "undefined" ? localStorage.getItem("lang") : null);
       if (newLoc) setLocale(newLoc);
     };
 
-    window.addEventListener('localeChanged', onLocaleChanged as EventListener);
+    window.addEventListener("localeChanged", onLocaleChanged as EventListener);
     const onStorage = () => onLocaleChanged(null);
-    window.addEventListener('storage', onStorage);
+    window.addEventListener("storage", onStorage);
 
     return () => {
       mounted = false;
-      window.removeEventListener('localeChanged', onLocaleChanged as EventListener);
-      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(
+        "localeChanged",
+        onLocaleChanged as EventListener
+      );
+      window.removeEventListener("storage", onStorage);
     };
   }, [locale, pathname]);
 
@@ -144,21 +183,29 @@ export default function BuildListPage() {
     <Box className="flex h-screen">
       {/* Sidebar */}
       <Menu />
-
       {/* Main */}
-      <Box className="flex-1 p-6 bg-gray-50 overflow-auto">
+      <Box
+        className="flex-1 overflow-auto"
+        sx={{ p: 6, bgcolor: 'background.default' }}
+      >
         {/* Header */}
         <Stack spacing={1} mb={4}>
           <Breadcrumbs aria-label="breadcrumb">
-            <MUILink underline="hover" color="inherit" href="/projects">
+            <MUILink underline="hover" color="text.primary" href="/projects">
               {t("project_page.projects")}
             </MUILink>
-            <MUILink underline="hover" color="inherit" href="/projects/project-detail">
+            <MUILink
+              underline="hover"
+              color="text.primary"
+              href="/projects/project-detail"
+            >
               Test Project
             </MUILink>
-            <Typography color="text.primary">{t("build_list.title")}</Typography>
+            <Typography color="text.primary">
+              {t("build_list.title")}
+            </Typography>
           </Breadcrumbs>
-          <Typography variant="h5">{t("build_list.title")}</Typography>
+          <Typography variant="h5" color="text.primary">{t("build_list.title")}</Typography>
         </Stack>
 
         {/* Search */}
@@ -169,6 +216,13 @@ export default function BuildListPage() {
           fullWidth
           size="small"
           sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
         />
 
         {/* Table */}
@@ -189,19 +243,41 @@ export default function BuildListPage() {
                 {filteredBuilds.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center">
-                      {t("build_list.no_builds")}
+                      <Typography color="text.secondary">
+                        {t("build_list.no_builds")}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredBuilds.map((b) => (
-                    <TableRow key={b.id} hover>
+                    <TableRow
+                      key={b.id}
+                      hover
+                      sx={{
+                        "&:nth-of-type(odd) td": {
+                          bgcolor: "background.paper",
+                        },
+                        "&:nth-of-type(even) td": {
+                          bgcolor: "background.default",
+                        },
+                        "&:hover td": { bgcolor: "action.hover" },
+                        transition: "background-color 120ms ease",
+                      }}
+                    >
                       <TableCell>
                         <StatusChip status={b.status} t={t} />
                       </TableCell>
                       <TableCell>
                         <MUILink underline="hover" href={`/builds/${b.id}`}>
-                          {b.message} ({b.commit})
+                          {b.message}
                         </MUILink>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          {b.commit}
+                        </Typography>
                       </TableCell>
                       <TableCell>{b.branch}</TableCell>
                       <TableCell>
@@ -212,7 +288,7 @@ export default function BuildListPage() {
                           <Typography variant="body2">{b.author}</Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell>{new Date(b.date).toLocaleString()}</TableCell>
+                      <TableCell>{formatDate(b.date, locale)}</TableCell>
                       <TableCell>{b.duration}</TableCell>
                     </TableRow>
                   ))

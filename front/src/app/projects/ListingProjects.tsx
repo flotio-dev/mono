@@ -99,12 +99,15 @@ export default function ListingProjects() {
       <Menu />
 
       {/* Main Content */}
-      <Box className="flex-1 p-6 bg-gray-50">
+      <Box
+        className="flex-1 p-6"
+        sx={{ bgcolor: "background.default" }}
+      >
         {/* Header */}
         <Box className="flex justify-between items-center mb-6">
           <Stack direction="row" spacing={1.5} alignItems="center">
             <FolderIcon fontSize="large" color="primary" />
-            <Typography variant="h4" className="font-bold">
+            <Typography variant="h4" fontWeight="bold" color="text.primary">
               {t('listing_projects.projects')}
             </Typography>
           </Stack>
@@ -116,32 +119,55 @@ export default function ListingProjects() {
         </Box>
 
         {/* Projects Table */}
-        <TableContainer component={Paper} className="shadow-md rounded-xl">
+        <TableContainer
+          component={Paper}
+          sx={{ borderRadius: 2, boxShadow: 2, bgcolor: 'background.paper' }}
+        >
           <Table>
             <TableHead>
-              <TableRow className="bg-gray-100">
-                <TableCell className="font-semibold">{t('common.name')}</TableCell>
-                <TableCell className="font-semibold">{t('listing_projects.recent_activity')}</TableCell>
-                <TableCell className="font-semibold">Slug</TableCell>
-                <TableCell></TableCell>
+              <TableRow sx={{ bgcolor: "action.hover" }}>
+                <TableCell sx={{ fontWeight: "bold", color: "text.primary" }}>
+                  {t('common.name')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "text.primary" }}>
+                  {t('listing_projects.recent_activity')}
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "text.primary" }}>
+                  Slug
+                </TableCell>
+                <TableCell />
               </TableRow>
             </TableHead>
             <TableBody>
               {projects.map((project, index) => (
                 <TableRow
                   key={project.slug}
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                   hover
+                  sx={{
+                    '&:nth-of-type(odd) td, &:nth-of-type(odd) th': {
+                      bgcolor: 'background.paper',
+                    },
+                    '&:nth-of-type(even) td, &:nth-of-type(even) th': {
+                      bgcolor: 'background.default',
+                    },
+                    '&:hover td, &:hover th': {
+                      bgcolor: 'action.hover',
+                    },
+                    transition: 'background-color 120ms ease',
+                    cursor: 'pointer',
+                  }}
                 >
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar sx={{ bgcolor: 'primary.main', color: 'white' }}>{project.name[0]}</Avatar>
+                      <Avatar sx={{ bgcolor: 'primary.main', color: 'white' }}>
+                        {project.name[0]}
+                      </Avatar>
                       <Link href={`/projects/project-detail`} passHref>
                         <Typography
                           component="a"
+                          color="text.primary"
                           sx={{
                             textDecoration: 'none',
-                            color: 'none',
                             fontWeight: 500,
                             '&:hover': { textDecoration: 'underline' },
                           }}
@@ -151,10 +177,15 @@ export default function ListingProjects() {
                       </Link>
                     </Stack>
                   </TableCell>
-                  <TableCell>{project.recentActivity}</TableCell>
+
                   <TableCell>
-                    <Typography className="text-gray-600">{project.slug}</Typography>
+                    <Typography color="text.secondary">{project.recentActivity}</Typography>
                   </TableCell>
+
+                  <TableCell>
+                    <Typography color="text.secondary">{project.slug}</Typography>
+                  </TableCell>
+
                   <TableCell>
                     <IconButton>
                       <MoreVertIcon />

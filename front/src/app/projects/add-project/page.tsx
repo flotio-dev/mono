@@ -26,16 +26,16 @@ export default function AddProjectPage() {
   const [translations, setTranslations] = useState<Record<string, any> | null>(null);
   const [locale, setLocale] = useState<'fr' | 'en'>('fr');
   const [newProject, setNewProject] = useState<any>({
-    name: "",
+    name: '',
     githubConnected: undefined,
-    repo: "",
-    buildPath: "/",
-    flutterVersion: "stable"
+    repo: '',
+    buildPath: '/',
+    flutterVersion: 'stable',
   });
   const [errors, setErrors] = useState<any>({});
   const router = useRouter();
 
-  // Charger la locale préférée
+  // Charger locale + traductions
   useEffect(() => {
     let mounted = true;
     const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
@@ -53,7 +53,7 @@ export default function AddProjectPage() {
     };
   }, []);
 
-  // fonction t()
+  // helper t()
   const t = (key: string) => {
     if (!translations) return key;
     const parts = key.split('.');
@@ -70,7 +70,7 @@ export default function AddProjectPage() {
     t('add_project.steps.github'),
     t('add_project.steps.repo'),
     t('add_project.steps.flutter'),
-    t('add_project.steps.summary')
+    t('add_project.steps.summary'),
   ];
 
   const validateStep = () => {
@@ -92,8 +92,7 @@ export default function AddProjectPage() {
     if (!validateStep()) return;
 
     if (activeStep === steps.length - 1) {
-      // 🚀 Envoi au backend
-      console.log("Envoi au backend :", newProject);
+      console.log('🚀 Envoi au backend :', newProject);
       router.push(`/projects/${newProject.name}`);
     } else {
       setActiveStep((prev) => prev + 1);
@@ -151,12 +150,11 @@ export default function AddProjectPage() {
               fullWidth
               error={!!errors.repo}
             >
-              <MenuItem value="">-- {t('add_project.fields.repo')} --</MenuItem>
+              <MenuItem value="">{`-- ${t('add_project.fields.repo')} --`}</MenuItem>
               <MenuItem value="repo1">repo1</MenuItem>
               <MenuItem value="repo2">repo2</MenuItem>
             </Select>
             {errors.repo && <FormHelperText error>{errors.repo}</FormHelperText>}
-
             <TextField
               label={t('add_project.fields.build_path')}
               value={newProject.buildPath}
@@ -188,15 +186,23 @@ export default function AddProjectPage() {
         return (
           <Stack spacing={2}>
             <Typography variant="h6">{t('add_project.steps.summary')}</Typography>
-            <Typography>{t('add_project.fields.project_name')} : {newProject.name}</Typography>
-            <Typography>GitHub : {newProject.githubConnected ? "Oui" : "Non"}</Typography>
+            <Typography>
+              {t('add_project.fields.project_name')} : {newProject.name}
+            </Typography>
+            <Typography>GitHub : {newProject.githubConnected ? 'Oui' : 'Non'}</Typography>
             {newProject.githubConnected && (
               <>
-                <Typography>{t('add_project.fields.repo')} : {newProject.repo}</Typography>
-                <Typography>{t('add_project.fields.build_path')} : {newProject.buildPath}</Typography>
+                <Typography>
+                  {t('add_project.fields.repo')} : {newProject.repo}
+                </Typography>
+                <Typography>
+                  {t('add_project.fields.build_path')} : {newProject.buildPath}
+                </Typography>
               </>
             )}
-            <Typography>{t('add_project.fields.flutter_version')} : {newProject.flutterVersion}</Typography>
+            <Typography>
+              {t('add_project.fields.flutter_version')} : {newProject.flutterVersion}
+            </Typography>
           </Stack>
         );
       default:
@@ -210,17 +216,16 @@ export default function AddProjectPage() {
       <Menu />
 
       {/* Main Content */}
-      <Box className="flex-1 p-6 bg-gray-50">
+      <Box className="flex-1 p-6" sx={{ bgcolor: 'background.default' }}>
         {/* Header */}
         <Box className="flex justify-between items-center mb-6">
           <Stack direction="row" spacing={1.5} alignItems="center">
             <FolderIcon fontSize="large" color="primary" />
-            <Typography variant="h4" className="font-bold">
+            <Typography variant="h4" className="font-bold" color="text.primary">
               {t('add_project.title')}
             </Typography>
           </Stack>
 
-          {/* Bouton retour */}
           <Link href="/projects" passHref>
             <Button variant="outlined" color="primary">
               {t('add_project.back_to_list')}
@@ -228,8 +233,8 @@ export default function AddProjectPage() {
           </Link>
         </Box>
 
-        {/* Stepper */}
-        <Paper className="p-6 shadow-md rounded-xl">
+        {/* Stepper + content */}
+        <Paper className="p-6 shadow-md rounded-xl" sx={{ bgcolor: 'background.paper' }}>
           <Stepper activeStep={activeStep} alternativeLabel>
             {steps.map((label) => (
               <Step key={label}>
@@ -243,9 +248,7 @@ export default function AddProjectPage() {
           {/* Navigation */}
           {activeStep === 1 ? (
             <Box mt={4} display="flex" justifyContent="flex-start">
-              <Button onClick={handleBack}>
-                {t('add_project.actions.back')}
-              </Button>
+              <Button onClick={handleBack}>{t('add_project.actions.back')}</Button>
             </Box>
           ) : (
             <Box mt={4} display="flex" justifyContent="space-between">

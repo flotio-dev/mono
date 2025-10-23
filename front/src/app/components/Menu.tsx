@@ -4,6 +4,7 @@ import { getTranslations } from '../../lib/clientTranslations';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useProxy } from '@/lib/hooks/useProxy';
+import { Switch } from '@mui/material';
 
 import {
   Box,
@@ -32,8 +33,15 @@ import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import TokenIcon from '@mui/icons-material/Token';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SettingsIcon from '@mui/icons-material/Settings';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
-// Organization popover (compact)
+// Theme provider context
+import { useThemeMode } from '@/app/providers/ThemeModeProvider';
+
+/***********************
+ * Organization Block
+ ***********************/
 function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) => string }) {
   const { data: session, status } = useSession();
   const [open, setOpen] = React.useState(false);
@@ -49,39 +57,11 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
         route: `${process.env.NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL}/users/me/organizations`,
         method: "GET",
       },
-    },);
-  }
+    });
+  };
 
   useEffect(() => {
     callProxyRequests();
-
-    /* const fetchOrgs = async () => {
-
-      if (status === 'authenticated' && userId) {
-        try {
-          const res = await fetch(`
-            ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/gateway/proxy`, {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session?.accessToken || ""}`
-            },
-            body: JSON.stringify({
-          });
-          if (!res.ok) throw new Error('Erreur API orgs');
-          const data = await res.json();
-          // data doit être un tableau d'objets { name, id }
-          setOrgs(Array.isArray(data) ? data : []);
-          // Sélectionne la première org par défaut si rien en localStorage
-          const storedId = typeof window !== 'undefined' ? localStorage.getItem('organizationId') : null;
-          const found = data.find((o: any) => o.id === storedId);
-          setCurrent(found || data[0] || null);
-        } catch {
-          setOrgs([]);
-          setCurrent(null);
-        }
-      }
-    };
-    fetchOrgs();*/
   }, [status, session]);
 
   useEffect(() => {
@@ -117,8 +97,12 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
           '&:hover': { backgroundColor: 'action.hover', transform: 'translateY(-2px)', boxShadow: 2 },
         }}
       >
-        <Typography variant="subtitle2" className="text-gray-600">{current?.name || ''}</Typography>
-        <Typography variant="caption" className="text-gray-400">{t('settings.change_org_hint') || 'Click to change / add'}</Typography>
+        <Typography variant="subtitle2" color="text.primary">
+          {current?.name || ''}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {t('settings.change_org_hint') || 'Click to change / add'}
+        </Typography>
       </Box>
 
       <Popover
@@ -129,7 +113,9 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
         <Box sx={{ width: 224, p: 2 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('settings.organizations_title') || 'Organizations'}</Typography>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            {t('settings.organizations_title') || 'Organizations'}
+          </Typography>
           <Stack spacing={1} sx={{ mb: 1 }}>
             {proxyData?.getOrgsByUser.details.data.map((o: { name: string; id: string }) => (
               <Button
@@ -161,7 +147,9 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
   );
 }
 
-// Profile block shown at the bottom of the menu
+/***********************
+ * Profile Block
+ ***********************/
 function ProfileBlock({ t }: { t: (k: string) => string }) {
   const { data: session } = useSession();
   const [open, setOpen] = React.useState(false);
@@ -186,7 +174,7 @@ function ProfileBlock({ t }: { t: (k: string) => string }) {
       >
         <Avatar>{(name?.[0] ?? 'U').toUpperCase()}</Avatar>
         <Box sx={{ overflow: 'hidden' }}>
-          <Typography variant="subtitle2" noWrap>
+          <Typography variant="subtitle2" color="text.primary" noWrap>
             {name || t('menu.anonymous') || 'Anonymous'}
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
@@ -205,10 +193,16 @@ function ProfileBlock({ t }: { t: (k: string) => string }) {
         <Box sx={{ width: 224, p: 2 }}>
           <Stack spacing={1}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar sx={{ width: 40, height: 40 }}>{(name?.[0] ?? 'U').toUpperCase()}</Avatar>
+              <Avatar sx={{ width: 40, height: 40 }}>
+                {(name?.[0] ?? 'U').toUpperCase()}
+              </Avatar>
               <Box>
-                <Typography variant="subtitle1">{name || t('menu.anonymous') || 'Anonymous'}</Typography>
-                <Typography variant="caption" color="text.secondary">{email}</Typography>
+                <Typography variant="subtitle1" color="text.primary">
+                  {name || t('menu.anonymous') || 'Anonymous'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {email}
+                </Typography>
               </Box>
             </Box>
 
@@ -231,6 +225,40 @@ function ProfileBlock({ t }: { t: (k: string) => string }) {
   );
 }
 
+/***********************
+ * Theme Selector Block
+ ***********************/
+function ThemeBlock({ t }: { t: (k: string) => string }) {
+  const { resolvedMode, toggle } = useThemeMode();
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        px: 1,
+        py: 0.5,
+      }}
+    >
+      <Stack direction="row" spacing={1} alignItems="center">
+        {resolvedMode === "dark" ? <DarkModeIcon /> : <LightModeIcon />}
+        <Typography variant="subtitle2" color="text.primary">
+          {resolvedMode === "dark" ? t("appearance.dark") : t("appearance.light")}
+        </Typography>
+      </Stack>
+      <Switch
+        checked={resolvedMode === "dark"}
+        onChange={toggle}
+        color="default"
+      />
+    </Box>
+  );
+}
+
+/***********************
+ * Main Menu
+ ***********************/
 export default function Menu() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -270,7 +298,6 @@ export default function Menu() {
           if (token) {
             console.debug('Got github token (redacted)');
             try {
-              // Emit the full payload so other parts of the app can consume the token + repositories
               if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
                 window.dispatchEvent(new CustomEvent('githubToken', { detail: data }));
               }
@@ -292,7 +319,7 @@ export default function Menu() {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
       if (stored === 'en' || stored === 'fr') return stored;
-    } catch {}
+    } catch { }
     if (!p) return 'fr';
     const parts = p.split('/');
     const candidate = parts[1];
@@ -367,13 +394,21 @@ export default function Menu() {
   const isActive = (href: string) => (href !== '/' ? pathname?.startsWith(href) : pathname === '/');
 
   return (
-    <Box className="w-64 bg-white border-r border-gray-200 p-4 flex flex-col" sx={{ height: '100vh' }}>
+    <Box
+      className="w-64 p-4 flex flex-col"
+      sx={{
+        height: "100vh",
+        bgcolor: "background.paper",
+        borderRight: 1,
+        borderColor: "divider",
+      }}
+    >
       {/* Brand */}
       <Stack direction="row" alignItems="center" spacing={1.5} className="mb-1">
         <Box className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
           <RocketLaunchIcon fontSize="small" />
         </Box>
-        <Typography variant="h6" className="font-extrabold tracking-tight">
+        <Typography variant="h6" className="font-extrabold tracking-tight" color="text.primary">
           Flotio
         </Typography>
       </Stack>
@@ -428,19 +463,25 @@ export default function Menu() {
                 >
                   <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
                   <ListItemText
-                    primaryTypographyProps={{ className: 'text-sm font-medium' }}
                     primary={item.label}
+                    primaryTypographyProps={{
+                      variant: "body2",
+                      fontWeight: 500,
+                      color: "text.primary",
+                    }}
                   />
                 </ListItemButton>
               ))}
+
             </List>
           ))}
         </Stack>
       </Box>
 
-      {/* Footer - profile (fixed) */}
+      {/* Footer - theme selector + profile */}
       <Divider className="my-2" />
       <Box>
+        <ThemeBlock t={t} />
         <ProfileBlock t={t} />
       </Box>
     </Box>

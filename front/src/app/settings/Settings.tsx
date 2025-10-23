@@ -1,9 +1,8 @@
 'use client';
 import React from 'react';
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { getTranslations } from '../../lib/clientTranslations';
 import { usePathname } from 'next/navigation';
-
 
 import {
   Box,
@@ -11,7 +10,6 @@ import {
   Paper,
   Stack,
   Button,
-  IconButton,
   Divider,
   Avatar,
   Select,
@@ -22,16 +20,14 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Menu from '../components/Menu';
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   
-  // Exemples de données fictives
-  const plan = 'Free';
+  const plan = 'Free'; // mock plan
   const [githubConnected, setGithubConnected] = React.useState(false);
 
   const pathname = usePathname();
   const [translations, setTranslations] = React.useState<Record<string, any> | null>(null);
 
-  // Determine locale from pathname prefix (/en/... or /fr/...). Default to 'fr'.
   const getPreferredLocale = (p?: string | null) => {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
@@ -61,8 +57,6 @@ export default function SettingsPage() {
     window.addEventListener('githubToken', (ev: Event) => {
       const e = ev as CustomEvent;
       const payload = e.detail;
-      // payload.github_access_token
-      // payload.repositories (array)
       setGithubConnected(!!payload.github_access_token);
     });
     window.addEventListener('localeChanged', onLocaleChanged as EventListener);
@@ -94,17 +88,35 @@ export default function SettingsPage() {
   return (
     <Box display="flex" minHeight="100vh">
       <Menu />
-      <Box component="main" flex={1} p={4}>
-        <Typography variant="h4" fontWeight={700} mb={4} display="flex" alignItems="center" gap={1}>
+      <Box
+        component="main"
+        flex={1}
+        p={4}
+        sx={{ bgcolor: 'background.default' }}
+      >
+        <Typography
+          variant="h4"
+          fontWeight={700}
+          mb={4}
+          display="flex"
+          alignItems="center"
+          gap={1}
+          color="text.primary"
+        >
           <AccountCircleIcon fontSize="large" />
           {t('settings.title')}
         </Typography>
 
         {/* User settings */}
-        <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
+        <Paper
+          variant="outlined"
+          sx={{ p: 3, mb: 4, bgcolor: 'background.paper' }}
+        >
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Box>
-              <Typography variant="subtitle1" fontWeight={600}>{t('settings.user_settings')}</Typography>
+              <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                {t('settings.user_settings')}
+              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t('settings.user_settings_description')}
               </Typography>
@@ -116,34 +128,50 @@ export default function SettingsPage() {
         </Paper>
 
         {/* Account information */}
-        <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
-          <Typography variant="subtitle1" fontWeight={600} mb={2}>{t('settings.account_information')}</Typography>
+        <Paper
+          variant="outlined"
+          sx={{ p: 3, mb: 4, bgcolor: 'background.paper' }}
+        >
+          <Typography variant="subtitle1" fontWeight={600} mb={2} color="text.primary">
+            {t('settings.account_information')}
+          </Typography>
           <Divider sx={{ mb: 2 }} />
           <Stack spacing={2}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography>{t('settings.avatar')}</Typography>
-              <Box display="flex" alignItems="center" gap={1}>
-                <Avatar sx={{ width: 40, height: 40 }}>U</Avatar>
-              </Box>
+              <Typography color="text.primary">{t('settings.avatar')}</Typography>
+              <Avatar sx={{ width: 40, height: 40 }}>
+                {session?.user?.name?.[0] || 'U'}
+              </Avatar>
             </Stack>
             <Divider />
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography>{t('common.username')}</Typography>
-              <Typography>{ session?.user?.name }</Typography>
+              <Typography color="text.primary">{t('common.username')}</Typography>
+              <Typography color="text.secondary">{session?.user?.name}</Typography>
             </Stack>
             <Divider />
             <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography>{t('settings.plan')}</Typography>
-              <Typography>{plan}</Typography>
+              <Typography color="text.primary">{t('settings.plan')}</Typography>
+              <Typography color="text.secondary">{plan}</Typography>
             </Stack>
           </Stack>
         </Paper>
 
         {/* Connections */}
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} mb={2}>{t('settings.connections')}</Typography>
+        <Paper
+          variant="outlined"
+          sx={{ p: 3, bgcolor: 'background.paper' }}
+        >
+          <Typography variant="subtitle1" fontWeight={600} mb={2} color="text.primary">
+            {t('settings.connections')}
+          </Typography>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t('settings.github_status', { status: githubConnected ? t('settings.github_connected') : t('settings.github_not_connected') })}</Typography>
+            <Typography color="text.primary">
+              {t('settings.github_status', {
+                status: githubConnected
+                  ? t('settings.github_connected')
+                  : t('settings.github_not_connected'),
+              })}
+            </Typography>
             <Button variant="outlined">
               {githubConnected ? t('settings.disconnect') : t('settings.connect')}
             </Button>
@@ -153,7 +181,7 @@ export default function SettingsPage() {
 
           {/* Language selector */}
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t('settings.language')}</Typography>
+            <Typography color="text.primary">{t('settings.language')}</Typography>
             <Select
               value={locale}
               onChange={(e) => {
@@ -161,12 +189,13 @@ export default function SettingsPage() {
                 try {
                   localStorage.setItem('lang', lang);
                   window.dispatchEvent(new CustomEvent('localeChanged', { detail: lang }));
-                } catch (err) {
+                } catch {
                   localStorage.setItem('lang_changed_at', Date.now().toString());
                 }
                 setLocale(lang);
               }}
               size="small"
+              sx={{ minWidth: 120 }}
             >
               <MenuItem value="fr">Français</MenuItem>
               <MenuItem value="en">English</MenuItem>

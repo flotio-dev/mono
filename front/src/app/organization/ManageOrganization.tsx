@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -27,8 +26,6 @@ import Link from 'next/link';
 import { getTranslations } from '../../lib/clientTranslations';
 import { useSession } from "next-auth/react";
 
-
-
 interface User {
   id: string;
   username: string;
@@ -40,20 +37,43 @@ interface User {
   role?: string;
 }
 
+/** Mock users pour tests */
+const mockUsers: User[] = [
+  {
+    id: "1",
+    username: "delikescance",
+    firstName: "Alex",
+    lastName: "Martin",
+    email: "alex.martin@example.com",
+    emailVerified: "true",
+    lastLoggedIn: "2025-10-21T18:30:00Z",
+    role: "Admin",
+  },
+  {
+    id: "2",
+    username: "jdoe",
+    firstName: "John",
+    lastName: "Doe",
+    email: "john.doe@example.com",
+    emailVerified: "true",
+    lastLoggedIn: "2025-10-20T10:45:00Z",
+    role: "Member",
+  },
+];
+
 export default function ManageOrganization() {
   const { data: session, status } = useSession();
   const [translations, setTranslations] = useState<Record<string, any> | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [orgInfo, setOrgInfo] = useState({
-    name: "",
-    description: "",
-    slug: ""
+    name: "Flotio Org",
+    description: "Organisation de test",
+    slug: "flotio-org"
   });
   const [editMode, setEditMode] = useState(false);
   const [orgDraft, setOrgDraft] = useState({ name: "", description: "", slug: "" });
-  const isAdmin = true; // Remplacer par un vrai check de rôle admin
+  const isAdmin = true;
 
-  // Locale & translation
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
   const getPreferredLocale = (p?: string | null) => {
     try {
@@ -68,7 +88,6 @@ export default function ManageOrganization() {
   };
   const [locale, setLocale] = useState(() => getPreferredLocale(pathname));
 
-  // Translation helper
   function t(key: string) {
     if (!translations) return key;
     const parts = key.split('.');
@@ -80,7 +99,6 @@ export default function ManageOrganization() {
     return typeof cur === 'string' ? cur : key;
   }
 
-  // State and handlers for MoreVertIcon contextual menu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const handleMenuOpen = (e: React.MouseEvent<HTMLElement>, user: User) => {
@@ -92,7 +110,6 @@ export default function ManageOrganization() {
     setSelectedUser(null);
   };
 
-  // Fetch translations and users
   useEffect(() => {
     let mounted = true;
     const load = async (loc: string) => {
@@ -101,123 +118,57 @@ export default function ManageOrganization() {
     };
     load(locale);
 
-    const onLocaleChanged = (e: any) => {
-      const newLoc = e?.detail ?? (typeof window !== 'undefined' ? localStorage.getItem('lang') : null);
-      if (newLoc) setLocale(newLoc);
-    };
+    // injection des mock users (temporaire)
+    setUsers(mockUsers);
 
-
-    // Fetch organization info from Keycloak API
-    const fetchOrgInfo = async () => {
-      try {
-        const keycloakBaseUrl = process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL || "";
-        const keycloakRealm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "";
-        const orgId = localStorage.getItem('organizationId');
-        const url = `${keycloakBaseUrl}/admin/realms/${keycloakRealm}/organizations/${orgId}`;
-        const res = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.accessToken || ""}`
-          },
-        });
-        if (!res.ok) {
-          console.error("Erreur lors de la récupération de l'organisation:", res.status, await res.text());
-          return;
-        }
-        const org = await res.json();
-        setOrgInfo({
-          name: org.name || "",
-          description: org.description || "",
-          slug: org.alias || ""
-        });
-        setOrgDraft({
-          name: org.name || "",
-          description: org.description || "",
-          slug: org.alias || ""
-        });
-      } catch (err) {
-        console.error("Erreur réseau org:", err);
-      }
-    };
-    fetchOrgInfo();
-
-    // Fetch members from Keycloak API
-    const fetchMembers = async () => {
-      try {
-        const keycloakBaseUrl = process.env.NEXT_PUBLIC_KEYCLOAK_BASE_URL || "";
-        const keycloakRealm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "";
-        const orgId = localStorage.getItem('organizationId');
-        const url = `${keycloakBaseUrl}/admin/realms/${keycloakRealm}/organizations/${orgId}/members`;
-        const res = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.accessToken || ""}`
-          },
-        });
-        if (!res.ok) {
-          console.error("Erreur lors de la récupération des membres:", res.status, await res.text());
-          return;
-        }
-        const data = await res.json();
-        setUsers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Erreur réseau:", err);
-      }
-    };
-    fetchMembers();
-
-    window.addEventListener('localeChanged', onLocaleChanged as EventListener);
-    const onStorage = () => onLocaleChanged(null);
-    window.addEventListener('storage', onStorage);
     return () => {
       mounted = false;
-      window.removeEventListener('localeChanged', onLocaleChanged as EventListener);
-      window.removeEventListener('storage', onStorage);
     };
   }, [locale]);
 
-  // --- RETURN PRINCIPAL DU COMPOSANT ---
   return (
     <Box className="flex h-screen">
       {/* Sidebar */}
-      <Menu/>
+      <Menu />
       {/* Main Content */}
-      <Box className="flex-1 p-6 bg-gray-50">
+      <Box className="flex-1 p-6" sx={{ bgcolor: 'background.default' }}>
         {/* Organization Info Section */}
-        <Box mb={4} p={3} component={Paper}>
-          <Typography variant="h5" fontWeight={700} mb={2}>{t('organization.organization_info') || "Informations de l'organisation"}</Typography>
+        <Box mb={4} p={3} component={Paper} sx={{ bgcolor: 'background.paper' }}>
+          <Typography variant="h5" fontWeight={700} mb={2} color='text.primary'>
+            {t('organization.organization_info')}
+          </Typography>
           {editMode ? (
             <Box component="form" display="flex" flexDirection="column" gap={2} onSubmit={e => { e.preventDefault(); setOrgInfo(orgDraft); setEditMode(false); }}>
-              <TextField label={t('common.name') || 'Nom'} value={orgDraft.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrgDraft({ ...orgDraft, name: e.target.value })} required />
-              <TextField label={t('common.description') || 'Description'} value={orgDraft.description} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrgDraft({ ...orgDraft, description: e.target.value })} multiline minRows={2} />
-              <TextField label={t('common.slug') || 'Slug'} value={orgDraft.slug} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrgDraft({ ...orgDraft, slug: e.target.value })} required />
+              <TextField label={t('common.name')} value={orgDraft.name} onChange={(e) => setOrgDraft({ ...orgDraft, name: e.target.value })} required />
+              <TextField label={t('common.description')} value={orgDraft.description} onChange={(e) => setOrgDraft({ ...orgDraft, description: e.target.value })} multiline minRows={2} />
+              <TextField label={t('common.slug')} value={orgDraft.slug} onChange={(e) => setOrgDraft({ ...orgDraft, slug: e.target.value })} required />
               <Box display="flex" gap={2} mt={1}>
-                <Button type="submit" variant="contained" color="primary">{t('common.save') || 'Enregistrer'}</Button>
-                <Button variant="outlined" color="secondary" onClick={() => { setEditMode(false); setOrgDraft(orgInfo); }}>{t('common.cancel') || 'Annuler'}</Button>
+                <Button type="submit" variant="contained" color="primary">{t('common.save')}</Button>
+                <Button variant="outlined" color="secondary" onClick={() => { setEditMode(false); setOrgDraft(orgInfo); }}>{t('common.cancel')}</Button>
               </Box>
             </Box>
           ) : (
             <>
-              <Typography><b>{t('common.name') || 'Nom'}:</b> {orgInfo.name}</Typography>
-              <Typography><b>{t('common.description') || 'Description'}:</b> {orgInfo.description}</Typography>
-              <Typography><b>{t('common.slug') || 'Slug'}:</b> {orgInfo.slug}</Typography>
+              <Typography><b>{t('common.name')}:</b> {orgInfo.name}</Typography>
+              <Typography><b>{t('common.description')}:</b> {orgInfo.description}</Typography>
+              <Typography><b>{t('common.slug')}:</b> {orgInfo.slug}</Typography>
               {isAdmin && (
-                <Button variant="outlined" sx={{ mt: 2 }} onClick={() => setEditMode(true)}>{t('common.edit') || 'Modifier'}</Button>
-              )}
+                <Button variant="contained" color="primary" onClick={() => setEditMode(true)}>{t('common.edit')}</Button>
+              )}            
             </>
           )}
         </Box>
+
         {/* Header */}
         <Box className="flex justify-between items-center mb-6">
           <Stack direction="row" spacing={1.5} alignItems="center">
             <SupervisedUserCircleIcon fontSize="large" color="primary" />
-            <Typography variant="h4" className="font-bold">
+            <Typography variant="h4" className="font-bold" color='text.primary'>
               {t('organization.users_in_organization')} : {orgInfo.name}
             </Typography>
           </Stack>
         </Box>
+
         {/* Add Member Button */}
         <Box display="flex" justifyContent="flex-end" mb={2}>
           <Link href="/organization/add-members" style={{ textDecoration: 'none' }}>
@@ -226,29 +177,30 @@ export default function ManageOrganization() {
             </Button>
           </Link>
         </Box>
+
         {/* Table of members */}
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} sx={{ bgcolor: 'background.paper' }}>
           <Table>
             <TableHead>
               <TableRow>
-                 <TableCell align="center">{t('common.first_name') || 'Prénom'}</TableCell>
-                 <TableCell align="center">{t('common.last_name') || 'Nom'}</TableCell>
-                 <TableCell align="center">{t('common.username') || 'Nom d\'utilisateur'}</TableCell>
-                 <TableCell align="center">{t('common.email') || 'Email'}</TableCell>
-                 <TableCell align="center">{t('organization.role') || 'Rôle'}</TableCell>
-                 <TableCell align="center">{t('organization.last_logged_in') || 'Dernière connexion'}</TableCell>
-                 <TableCell align="right">Actions</TableCell>
+                <TableCell align="center">{t('common.first_name')}</TableCell>
+                <TableCell align="center">{t('common.last_name')}</TableCell>
+                <TableCell align="center">{t('common.username')}</TableCell>
+                <TableCell align="center">{t('common.email')}</TableCell>
+                <TableCell align="center">{t('organization.role')}</TableCell>
+                <TableCell align="center">{t('organization.last_logged_in')}</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
-                   <TableCell align="center">{user.firstName || '————'}</TableCell>
-                   <TableCell align="center">{user.lastName || '————'}</TableCell>
-                   <TableCell align="center">{user.username || '————'}</TableCell>
-                   <TableCell align="center">{user.email || '————'}</TableCell>
-                   <TableCell align="center">{user.role || '————'}</TableCell>
-                   <TableCell align="center">{user.lastLoggedIn || '————'}</TableCell>
+                <TableRow key={user.id} hover>
+                  <TableCell align="center">{user.firstName || '—'}</TableCell>
+                  <TableCell align="center">{user.lastName || '—'}</TableCell>
+                  <TableCell align="center">{user.username || '—'}</TableCell>
+                  <TableCell align="center">{user.email || '—'}</TableCell>
+                  <TableCell align="center">{user.role || '—'}</TableCell>
+                  <TableCell align="center">{user.lastLoggedIn ? new Date(user.lastLoggedIn).toLocaleString() : '—'}</TableCell>
                   <TableCell align="right">
                     <IconButton onClick={(e) => handleMenuOpen(e, user)}>
                       <MoreVertIcon />
@@ -257,22 +209,15 @@ export default function ManageOrganization() {
                 </TableRow>
               ))}
             </TableBody>
-        </Table>
-      </TableContainer>
-      {/* Contextual menu for user actions (en dehors du map) */}
-      <MuiMenu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => { /* Ajoute ici la logique de modification */ handleMenuClose(); }}>
-          {t('organization.edit_user')}
-        </MenuItem>
-        <MenuItem onClick={() => { /* Ajoute ici la logique de suppression */ handleMenuClose(); }}>
-          {t('organization.delete_user')}
-        </MenuItem>
-      </MuiMenu>
+          </Table>
+        </TableContainer>
+
+        {/* Contextual menu */}
+        <MuiMenu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+          <MenuItem onClick={() => { handleMenuClose(); }}>{t('organization.edit_user')}</MenuItem>
+          <MenuItem onClick={() => { handleMenuClose(); }}>{t('organization.delete_user')}</MenuItem>
+        </MuiMenu>
+      </Box>
     </Box>
-  </Box>
   );
 }

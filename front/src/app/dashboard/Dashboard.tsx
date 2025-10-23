@@ -170,12 +170,16 @@ export default function DashboardPage() {
     <Box display="flex" minHeight="100vh">
       <a href=""></a>
       <Menu />
-      <Box component="main" flex={1} p={4}>
+      <Box
+        component="main"
+        flex={1}
+        p={4}
+        sx={{ bgcolor: 'background.default' }}
+      >
         <Stack spacing={4}>
           <Stack direction="row" alignItems="center" spacing={2}>
             <SpaceDashboardIcon fontSize="large" color="primary" />
-
-            <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h3" sx={{ fontWeight: 'bold' }} color="text.primary">
               {t('menu.dashboard')}
             </Typography>
           </Stack>

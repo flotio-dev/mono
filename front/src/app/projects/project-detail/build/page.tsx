@@ -53,7 +53,7 @@ const getPreferredLocale = (p?: string | null) => {
     const stored =
       typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
     if (stored === 'en' || stored === 'fr') return stored;
-  } catch {}
+  } catch { }
   if (!p) return 'fr';
   const parts = p.split('/');
   const candidate = parts[1];
@@ -133,7 +133,10 @@ export default function BuildDetailsPage() {
       <Menu />
 
       {/* Main content */}
-      <Box className="flex-1 p-6 bg-gray-50 overflow-auto">
+      <Box
+        className="flex-1 overflow-auto"
+        sx={{ p: 6, bgcolor: "background.default" }}
+      >
         {/* Header */}
         <Stack spacing={1} mb={4}>
           <Breadcrumbs aria-label="breadcrumb">
@@ -147,7 +150,8 @@ export default function BuildDetailsPage() {
               {t("build_details.title")} {buildId}
             </Typography>
           </Breadcrumbs>
-          <Typography variant="h5">
+
+          <Typography variant="h5" color="text.primary">
             {t("build_details.title")} {buildId}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -156,13 +160,21 @@ export default function BuildDetailsPage() {
         </Stack>
 
         {/* Steps */}
-        <Paper className="rounded-xl shadow-sm">
+        <Paper
+          sx={{
+            borderRadius: 2,
+            boxShadow: 2,
+            bgcolor: "background.paper",
+          }}
+        >
           {mockSteps.map((step) => (
             <Accordion key={step.id} disableGutters>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Stack direction="row" spacing={2} alignItems="center" flex={1}>
                   <StepStatus status={step.status} t={t} />
-                  <Typography sx={{ flex: 1 }}>{step.name}</Typography>
+                  <Typography sx={{ flex: 1 }} color="text.primary">
+                    {step.name}
+                  </Typography>
                   <Typography color="text.secondary">
                     {step.duration}
                   </Typography>
@@ -170,9 +182,23 @@ export default function BuildDetailsPage() {
               </AccordionSummary>
               <AccordionDetails>
                 {step.logs ? (
-                  <pre className="text-sm bg-gray-900 text-green-200 p-2 rounded">
+                  <Paper
+                    variant="outlined"
+                    sx={(theme) => ({
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: theme.palette.mode === "dark" ? "grey.900" : "grey.100",
+                      color: theme.palette.mode === "dark" ? "grey.100" : "grey.900",
+                      fontFamily: "monospace",
+                      fontSize: "0.875rem",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      overflowX: "auto",
+                      maxHeight: 300,
+                    })}
+                  >
                     {step.logs.join("\n")}
-                  </pre>
+                  </Paper>
                 ) : (
                   <Typography color="text.secondary">
                     {t("build_details.no_logs")}

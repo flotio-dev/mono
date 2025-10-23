@@ -15,6 +15,13 @@
     "description": "Description",
     "slug": "Slug"
   },
+  "appearance": {
+    "title": "Apparence",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
   "login": {
     "call_gateway": "Appeler la passerelle : Hello World",
     "call_gateway_with_token": "Appeler la passerelle : Hello World (avec token)",

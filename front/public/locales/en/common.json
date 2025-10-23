@@ -14,6 +14,13 @@
     "description": "Description",
     "slug": "Slug"
   },
+  "appearance": {
+    "title": "Appearance",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "login": {
     "call_gateway": "Call Gateway: Hello World",
     "call_gateway_with_token": "Call Gateway: Hello World (with token)",

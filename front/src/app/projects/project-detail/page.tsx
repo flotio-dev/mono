@@ -7,6 +7,7 @@ import {
   Divider,
   Stack,
   Paper,
+  Grid,
   Typography,
   Avatar,
   IconButton,
@@ -39,7 +40,6 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import Menu from '../../components/Menu';
 import { useEffect, useMemo, useState } from 'react';
 import { getTranslations } from '../../../lib/clientTranslations';
-import Grid from '@mui/material/Grid';
 
 /*******************
  * Types & Mock Data
@@ -233,12 +233,8 @@ function SettingsTabs({ t }: { t: (key: string) => string }) {
       {tab === 1 && (
         <Stack spacing={2}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
               <TextField label={t("project_page.key")} placeholder="NEXT_PUBLIC_API_URL" fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
               <TextField label={t("project_page.value")} placeholder="https://api.example.com" fullWidth />
-            </Grid>
           </Grid>
           <Stack direction="row" spacing={2}>
             <Button variant="contained">{t("project_page.add_variable")}</Button>
@@ -307,14 +303,10 @@ function SettingsTabs({ t }: { t: (key: string) => string }) {
       {tab === 3 && (
         <Stack spacing={2}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
               <TextField label={t("project_page.invite_member")} placeholder="email@example.com" fullWidth />
-            </Grid>
-            <Grid item xs={12} md={6}>
               <Button variant="contained" sx={{ height: '100%' }}>
                 {t("project_page.send_invite")}
               </Button>
-            </Grid>
           </Grid>
           <Divider />
           <Typography variant="subtitle2">{t("project_page.project_members")}</Typography>
@@ -414,7 +406,10 @@ export default function ProjectPage() {
       <Menu />
 
       {/* Main Content */}
-      <Box className="flex-1 p-6 bg-gray-50 overflow-auto">
+      <Box
+        className="flex-1 overflow-auto"
+        sx={{ p: 6, bgcolor: 'background.default' }}
+      >
         {/* Header */}
         <Box className="flex justify-between items-start mb-6">
           <Stack spacing={1}>
@@ -429,12 +424,13 @@ export default function ProjectPage() {
                 {project.name[0]}
               </Avatar>
               <div>
-                <Typography variant="h4" className="font-bold">
+                <Typography variant="h4" className="font-bold" color="text.primary">
                   {project.name}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <Chip
                     size="small"
+                    color="default"
                     label={
                       project.ownership.type === 'organization'
                         ? `${t("project_page.organization")}: ${project.ownership.name}`
@@ -443,6 +439,7 @@ export default function ProjectPage() {
                   />
                   <Chip
                     size="small"
+                    color="default"
                     label={`${t("project_page.created_at")} ${formatDate(project.createdAt, locale)}`}
                   />
                 </Stack>
@@ -470,38 +467,24 @@ export default function ProjectPage() {
 
         {/* Top Stats & Build Settings */}
         <Grid container spacing={2}>
-          <Grid item xs={12} md={8}>
-            <Card className="rounded-xl shadow-sm">
+            <Card sx={{ borderRadius: 2, boxShadow: 2, bgcolor: 'background.paper' }}>
               <CardContent>
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={2}
-                >
-                  <Typography variant="h6">{t("project_page.overview")}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t("project_page.last_activity")}: {formatDate(project.lastActivityAt, locale)}
-                  </Typography>
-                </Stack>
+                <Typography variant="h6" color="text.primary">
+                  {t("project_page.overview")}
+                </Typography>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={4}>
                     <Paper className="rounded-xl" sx={{ p: 2 }}>
                       <Typography variant="overline">{t("project_page.total_builds")}</Typography>
                       <Typography variant="h5">{project.stats.total}</Typography>
                     </Paper>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
                     <Paper className="rounded-xl" sx={{ p: 2 }}>
                       <Typography variant="overline">{t("project_page.success")}</Typography>
                       <Stack direction="row" spacing={1} alignItems="center">
                         <CheckCircleIcon fontSize="small" />
                         <Typography variant="h5">{project.stats.success}</Typography>
-                        <Chip size="small" label={`${successRate}%`} />
+                        <Chip size="small" color="default" label={`${successRate}%`} />
                       </Stack>
                     </Paper>
-                  </Grid>
-                  <Grid item xs={12} md={4}>
                     <Paper className="rounded-xl" sx={{ p: 2 }}>
                       <Typography variant="overline">{t("project_page.failed")}</Typography>
                       <Stack direction="row" spacing={1} alignItems="center">
@@ -509,7 +492,6 @@ export default function ProjectPage() {
                         <Typography variant="h5">{project.stats.failed}</Typography>
                       </Stack>
                     </Paper>
-                  </Grid>
                 </Grid>
 
                 <Divider sx={{ my: 2 }} />
@@ -521,12 +503,10 @@ export default function ProjectPage() {
                 </Typography>
               </CardContent>
             </Card>
-          </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Card className="rounded-xl shadow-sm">
+            <Card sx={{ bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
               <CardContent>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h6" color="text.primary" gutterBottom>
                   {t("project_page.build_settings")}
                 </Typography>
                 <Stack spacing={1}>
@@ -556,7 +536,6 @@ export default function ProjectPage() {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
 
         {/* Recent Builds Table */}
         <Box mt={3}>
@@ -567,7 +546,7 @@ export default function ProjectPage() {
               alignItems="center"
               mb={1}
             >
-              <Typography variant="h6">{t("project_page.builds")}</Typography>
+              <Typography variant="h6" color="text.primary">{t("project_page.builds")}</Typography>
               <Button
                 size="small"
                 href="/projects/project-detail/view-all-builds"
@@ -593,32 +572,29 @@ export default function ProjectPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {project.recentBuilds.map((b) => (
-                      <TableRow key={b.id} hover>
+                    {project.recentBuilds.map((b, i) => (
+                      <TableRow
+                        key={b.id}
+                        hover
+                        sx={{
+                          '&:nth-of-type(odd) td': { bgcolor: 'background.paper' },
+                          '&:nth-of-type(even) td': { bgcolor: 'background.default' },
+                          '&:hover td': { bgcolor: 'action.hover' },
+                          transition: 'background-color 120ms ease',
+                        }}
+                      >
                         <TableCell>
-                          <MUILink
-                            //href={`/${detectLocale(pathname)}/builds/${b.id}`}
-                            href={`/projects/project-detail/build`}
-                            underline="none"
-                          >
+                          <MUILink href={`/projects/project-detail/build`} underline="none">
                             {b.id}
                           </MUILink>
                         </TableCell>
+                        <TableCell><StatusChip status={b.status} t={t} /></TableCell>
                         <TableCell>
-                          <StatusChip status={b.status} t={t} />
+                          <Typography color="text.secondary">{formatDate(b.startedAt, locale)}</Typography>
                         </TableCell>
-                        <TableCell>{formatDate(b.startedAt, locale)}</TableCell>
-                        <TableCell>
-                          {b.finishedAt
-                            ? formatDate(b.finishedAt, locale)
-                            : '—'}
-                        </TableCell>
+                        <TableCell>{b.finishedAt ? formatDate(b.finishedAt, locale) : '—'}</TableCell>
                         <TableCell>{b.description}</TableCell>
-                        <TableCell align="right">
-                          <IconButton size="small">
-                            <MoreVertIcon />
-                          </IconButton>
-                        </TableCell>
+                        <TableCell align="right"><IconButton size="small"><MoreVertIcon /></IconButton></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -631,8 +607,10 @@ export default function ProjectPage() {
         {/* Settings Section */}
         <Box mt={3}>
           <Stack direction="row" spacing={1} alignItems="center" mb={1}>
-            <SettingsIcon />
-            <Typography variant="h6">{t("project_page.edit_project")}</Typography>
+            <SettingsIcon color="action" />
+            <Typography variant="h6" color="text.primary">
+              {t("project_page.edit_project")}
+            </Typography>
           </Stack>
           <SettingsTabs t={t} />
         </Box>

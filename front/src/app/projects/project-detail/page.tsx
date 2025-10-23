@@ -154,7 +154,7 @@ const getPreferredLocale = (p?: string | null) => {
     const stored =
       typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
     if (stored === 'en' || stored === 'fr') return stored;
-  } catch {}
+  } catch { }
   if (!p) return 'fr';
   const parts = p.split('/');
   const candidate = parts[1];
@@ -216,7 +216,7 @@ function SettingsTabs({ t }: { t: (key: string) => string }) {
         <Tab icon={<VpnKeyIcon />} iconPosition="start" label={t("project_page.api_keys")} />
         <Tab icon={<PeopleIcon />} iconPosition="start" label={t("project_page.members")} />
       </Tabs>
-            {/* Onglet 0 : Environnement */}
+      {/* Onglet 0 : Environnement */}
       {tab === 0 && (
         <Stack spacing={2}>
           <TextField label={t("project_page.env_name")} placeholder="production" fullWidth />
@@ -568,7 +568,12 @@ export default function ProjectPage() {
               mb={1}
             >
               <Typography variant="h6">{t("project_page.builds")}</Typography>
-              <Button size="small">{t("project_page.view_all")}</Button>
+              <Button
+                size="small"
+                href="/projects/project-detail/view-all-builds"
+              >
+                {t("project_page.view_all")}
+              </Button>
             </Stack>
             {project.recentBuilds.length === 0 ? (
               <Typography color="text.secondary">
@@ -592,7 +597,8 @@ export default function ProjectPage() {
                       <TableRow key={b.id} hover>
                         <TableCell>
                           <MUILink
-                            href={`/${detectLocale(pathname)}/builds/${b.id}`}
+                            //href={`/${detectLocale(pathname)}/builds/${b.id}`}
+                            href={`/projects/project-detail/build`}
                             underline="none"
                           >
                             {b.id}

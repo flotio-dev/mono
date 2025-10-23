@@ -11,6 +11,7 @@ const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M3 7l9 6 9-6" />
   </svg>
 );
+
 const LockClosedIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" {...props}>
     <rect x="3" y="11" width="18" height="10" rx="2" />
@@ -19,16 +20,19 @@ const LockClosedIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { data: session } = useSession();
-
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  // Redirection si déjà connecté
   useEffect(() => {
-    if (session) router.replace("/dashboard");
+    if (session) {
+      router.replace("/dashboard");
+    }
   }, [session, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,46 +41,41 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     setLoading(true);
-    try {
-      const res = await signIn("credentials", {
-        redirect: false,
-        email: form.email,
-        password: form.password,
-      });
-      if (res?.ok) {
-        router.push("/dashboard");
-      } else {
-        setMessage(res?.error || "Invalid credentials");
-      }
-    } catch {
-      setMessage("Unexpected error");
-    } finally {
-      setLoading(false);
+    setMessage(null);
+
+    const res = await signIn("credentials", {
+      redirect: false,
+      username: form.username,
+      password: form.password,
+    });
+
+    if (res?.error) {
+      setMessage(res.error);
+    } else {
+      router.push("/dashboard");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div
-      className="flex items-center justify-center min-h-screen bg-purple-100 bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: "url('/tttt.svg')" }}
-    >
-      {/* Fenêtre blanche */}
+    <div className="flex items-center justify-center min-h-screen bg-purple-100 bg-cover bg-center bg-no-repeat"
+         style={{ backgroundImage: "url('/tttt.svg')" }}>
       <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-        
-        {/* Colonne gauche (formulaire login) */}
+        {/* Colonne gauche */}
         <div className="flex w-full md:w-1/2 items-center justify-center bg-gray-50">
           <div className="p-8 w-full max-w-sm">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Sign In</h2>
 
             <div className="space-y-4">
-              {/* Email */}
+              {/* Username */}
               <div className="relative">
                 <EnvelopeIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={form.email}
+                  type="text"
+                  name="username"
+                  placeholder="Username"
+                  value={form.username}
                   onChange={handleChange}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
@@ -122,7 +121,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Colonne droite (panneau violet) */}
+        {/* Colonne droite */}
         <div className="hidden md:flex w-1/2 bg-gradient-to-br from-purple-600 to-indigo-700 text-white items-center justify-center p-12 relative">
           <div className="max-w-md text-center">
             <h1 className="text-4xl font-bold mb-4">Welcome back!</h1>
@@ -130,7 +129,6 @@ export default function LoginPage() {
               Sign in to access your account and continue where you left off.
             </p>
           </div>
-          {/* Décorations */}
           <div className="absolute top-8 left-8 w-20 h-20 bg-white/10 rounded-full"></div>
           <div className="absolute bottom-16 right-16 w-32 h-32 bg-white/10 rounded-full"></div>
         </div>

@@ -17,6 +17,7 @@ func Router() http.Handler {
 	// Public auth routes
 	r.HandleFunc("/auth/register", controller.RegisterHandler).Methods("POST")
 	r.HandleFunc("/auth/login", controller.LoginHandler).Methods("POST")
+	r.HandleFunc("/auth/refresh", controller.RefreshTokenHandler).Methods("POST")
 	r.HandleFunc("/auth/github/callback", controller.GithubCallbackHandler).Methods("GET")
 
 	// Health check

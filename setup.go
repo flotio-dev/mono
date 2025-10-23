@@ -21,6 +21,7 @@ func main() {
 
 	fmt.Println("Env GITHUB_WEBHOOK_SECRET =", os.Getenv("GITHUB_WEBHOOK_SECRET"))
 	fmt.Println("Env NEXT_PUBLIC_GITHUB_APP =", os.Getenv("NEXT_PUBLIC_GITHUB_APP"))
+	fmt.Println("Env DATABASE_URL =", os.Getenv("DATABASE_URL"))
 
 	// Configuration
 	keycloakBaseURL := getEnvWithDefault("KEYCLOAK_BASE_URL", "http://localhost:8081")

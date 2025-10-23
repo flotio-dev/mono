@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -12,6 +13,7 @@ var DB *gorm.DB
 
 func InitDB() {
 	dsn := os.Getenv("DATABASE_URL")
+	fmt.Printf("DB URL : %s", dsn)
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is not set")
 	}

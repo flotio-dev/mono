@@ -116,7 +116,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, map[string]string{"token": tokenResp.AccessToken})
+	utils.WriteJSON(w, map[string]string{
+		"access_token":  tokenResp.AccessToken,
+		"refresh_token": tokenResp.RefreshToken,
+		"expires_in":    fmt.Sprintf("%d", tokenResp.ExpiresIn),
+	})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +148,40 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, map[string]string{"token": token.AccessToken})
+	utils.WriteJSON(w, map[string]string{
+		"access_token":  token.AccessToken,
+		"refresh_token": token.RefreshToken,
+		"expires_in":    fmt.Sprintf("%d", token.ExpiresIn),
+	})
+}
+
+func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	client := utils.GetKeycloakClient()
+	ctx := context.Background()
+	realm := os.Getenv("KEYCLOAK_REALM")
+	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
+	clientSecret := os.Getenv("KEYCLOAK_CLIENT_SECRET")
+
+	token, err := client.RefreshToken(ctx, body.RefreshToken, clientID, clientSecret, realm)
+	if err != nil {
+		log.Printf("Refresh token failed: %v", err)
+		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	utils.WriteJSON(w, map[string]string{
+		"access_token":  token.AccessToken,
+		"refresh_token": token.RefreshToken,
+		"expires_in":    fmt.Sprintf("%d", token.ExpiresIn),
+	})
 }
 
 func MeGetHandler(w http.ResponseWriter, r *http.Request) {

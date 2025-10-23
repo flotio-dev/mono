@@ -60,7 +60,7 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
       if (status === 'authenticated' && userId) {
         try {
           const res = await fetch(`
-            ${process.env.NEXT_PUBLIC_GATEWAY_BASE_URL}/api/gateway/proxy`, {
+            ${process.env.NEXT_PUBLIC_API_BASE_URL}/api/gateway/proxy`, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session?.accessToken || ""}`

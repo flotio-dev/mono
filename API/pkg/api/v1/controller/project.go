@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/flotio-dev/api/pkg/db"
+	"github.com/flotio-dev/api/pkg/kubernetes"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
@@ -231,7 +232,18 @@ func ProjectBuildHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Start actual build process
+	// Start the build process by creating a Kubernetes pod
+	if err := kubernetes.CreateBuildPod(build.ID, project, req.Platform); err != nil {
+		// If pod creation fails, update build status to failed
+		build.Status = "failed"
+		db.DB.Save(&build)
+		http.Error(w, "Failed to start build process", http.StatusInternalServerError)
+		return
+	}
+
+	// Update build status to running
+	build.Status = "running"
+	db.DB.Save(&build)
 
 	utils.WriteJSON(w, map[string]interface{}{"build": build})
 }
@@ -316,19 +328,25 @@ func BuildLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var logs []db.Log
-	if err := db.DB.Joins("JOIN builds ON logs.build_id = builds.id").Joins("JOIN projects ON builds.project_id = projects.id").Where("logs.build_id = ? AND projects.id = ? AND projects.user_id = (SELECT id FROM users WHERE keycloak_id = ?)", buildID, projectID, *userInfo.Sub).Order("logs.line_number ASC").Find(&logs).Error; err != nil {
+	// Verify the build belongs to the user's project
+	var build db.Build
+	if err := db.DB.Joins("JOIN projects ON builds.project_id = projects.id").Where("builds.id = ? AND projects.id = ? AND projects.user_id = (SELECT id FROM users WHERE keycloak_id = ?)", buildID, projectID, *userInfo.Sub).First(&build).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			http.Error(w, "Build not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to fetch build", http.StatusInternalServerError)
+		return
+	}
+
+	// Get logs from the Kubernetes pod
+	logs, err := kubernetes.GetPodLogs(uint(buildID))
+	if err != nil {
 		http.Error(w, "Failed to fetch logs", http.StatusInternalServerError)
 		return
 	}
 
-	// Convert to simple string array for backward compatibility
-	logLines := make([]string, len(logs))
-	for i, log := range logs {
-		logLines[i] = log.Content
-	}
-
-	utils.WriteJSON(w, map[string]interface{}{"logs": logLines})
+	utils.WriteJSON(w, map[string]interface{}{"logs": logs})
 }
 
 func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
@@ -366,26 +384,40 @@ func BuildLogsWSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Simulate sending logs and store them
-	logLines := []string{"Starting build...", "Compiling...", "Build successful!"}
-	for i, logLine := range logLines {
-		// Store log in DB
+	// Stream logs from the Kubernetes pod
+	logChan := make(chan string, 100)
+	go func() {
+		err := kubernetes.StreamPodLogs(uint(buildID), logChan)
+		if err != nil {
+			fmt.Printf("Error streaming pod logs: %v\n", err)
+		}
+	}()
+
+	// Get the current max line number for this build
+	var maxLine db.Log
+	if err := db.DB.Where("build_id = ?", buildID).Order("line_number DESC").First(&maxLine).Error; err != nil {
+		// If no logs exist, start from 1
+		maxLine.LineNumber = 0
+	}
+	lineNumber := maxLine.LineNumber + 1
+
+	for logLine := range logChan {
+		// Save log to database
 		logEntry := db.Log{
 			BuildID:    uint(buildID),
-			LineNumber: i + 1,
+			LineNumber: lineNumber,
 			Content:    logLine,
 			Timestamp:  time.Now().Unix(),
 		}
 		if err := db.DB.Create(&logEntry).Error; err != nil {
-			// Log error but continue
-			fmt.Printf("Failed to store log: %v\n", err)
+			fmt.Printf("Failed to save log to database: %v\n", err)
 		}
 
 		err := conn.WriteMessage(websocket.TextMessage, []byte(logLine))
 		if err != nil {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		lineNumber++
 	}
 }
 

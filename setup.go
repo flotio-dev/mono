@@ -113,13 +113,16 @@ func main() {
 	apiPort := getEnvWithDefault("API_PORT", "8080")
 	githubClientID := getEnvWithDefault("GITHUB_CLIENT_ID", "xxx")
 	githubClientSecret := getEnvWithDefault("GITHUB_CLIENT_SECRET", "xxxx")
-	nextPublicGateway := getEnvWithDefault("NEXT_PUBLIC_GATEWAY_BASE_URL", "http://localhost:8080")
+	nextPublicAPI := getEnvWithDefault("NEXT_PUBLIC_API_BASE_URL", "http://localhost:8080")
 	nextPublicOrg := getEnvWithDefault("NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL", "http://localhost:8082")
 	nextPublicProject := getEnvWithDefault("NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL", "http://localhost:8083")
 	githubWebhookSecret := getEnvWithDefault("GITHUB_WEBHOOK_SECRET", "secret")
 	nextPublicGithubApp := getEnvWithDefault("NEXT_PUBLIC_GITHUB_APP", "app")
 
-	err = writeEnvFile(realmName, *clientDetails.ClientID, *secret.Value, keycloakBaseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject, githubWebhookSecret, nextPublicGithubApp)
+	kubeAPIURL := getEnvWithDefault("KUBE_API_URL", "https://127.0.0.1:6443")
+	kubeToken := getEnvWithDefault("KUBE_TOKEN", "")
+
+	err = writeEnvFile(realmName, *clientDetails.ClientID, *secret.Value, keycloakBaseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicAPI, nextPublicOrg, nextPublicProject, githubWebhookSecret, nextPublicGithubApp, kubeAPIURL, kubeToken)
 	if err != nil {
 		fmt.Printf("Failed to write env file: %v\n", err)
 	} else {
@@ -135,7 +138,7 @@ func main() {
 	fmt.Println("Setup completed successfully!")
 }
 
-func writeEnvFile(realmName, clientID, clientSecret, baseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject, githubWebhookSecret, nextPublicGithubApp string) error {
+func writeEnvFile(realmName, clientID, clientSecret, baseURL, databaseURL, apiPort, githubClientID, githubClientSecret, nextPublicGateway, nextPublicOrg, nextPublicProject, githubWebhookSecret, nextPublicGithubApp, kubeAPIURL, kubeToken string) error {
 	// Create API env content
 	apiEnv := fmt.Sprintf(`KEYCLOAK_REALM=%s
 KEYCLOAK_CLIENT_ID=%s
@@ -153,9 +156,13 @@ GITHUB_CLIENT_SECRET=%s
 # Database Configuration
 DATABASE_URL=%s
 
+# Kubernetes Configuration
+KUBE_API_URL=%s
+KUBE_TOKEN=%s
+
 # Github Configuration
 GITHUB_WEBHOOK_SECRET=%s
-`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, apiPort, githubClientID, githubClientSecret, databaseURL, githubWebhookSecret)
+`, realmName, clientID, clientSecret, clientID, clientSecret, baseURL, baseURL, realmName, apiPort, githubClientID, githubClientSecret, databaseURL, kubeAPIURL, kubeToken, githubWebhookSecret)
 
 	// Create front env content
 	frontEnv := fmt.Sprintf(`KEYCLOAK_REALM=%s
@@ -167,7 +174,7 @@ KEYCLOAK_BASE_URL=%s
 KEYCLOAK_ISSUER=%s/realms/%s
 
 # Gateway Configuration
-NEXT_PUBLIC_GATEWAY_BASE_URL=%s
+NEXT_PUBLIC_API_BASE_URL=%s
 NEXT_PUBLIC_ORGANIZATION_SERVICE_BASE_URL=%s
 NEXT_PUBLIC_PROJECT_SERVICE_BASE_URL=%s
 

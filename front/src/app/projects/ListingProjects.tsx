@@ -49,7 +49,7 @@ export default function ListingProjects() {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
       if (stored === 'en' || stored === 'fr') return stored;
-    } catch {}
+    } catch { }
     if (!p) return 'fr';
     const parts = p.split('/');
     const candidate = parts[1];
@@ -108,9 +108,9 @@ export default function ListingProjects() {
               {t('listing_projects.projects')}
             </Typography>
           </Stack>
-          <Link href="/NewProject" passHref>
+          <Link href="/projects/add-project" passHref>
             <Button variant="contained" color="primary">
-            {t('listing_projects.create_project')}
+              {t('listing_projects.create_project')}
             </Button>
           </Link>
         </Box>
@@ -135,10 +135,20 @@ export default function ListingProjects() {
                 >
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar sx={{ bgcolor: 'primary.main', color: 'white' }}>
-                        {project.name[0]}
-                      </Avatar>
-                      <Typography>{project.name}</Typography>
+                      <Avatar sx={{ bgcolor: 'primary.main', color: 'white' }}>{project.name[0]}</Avatar>
+                      <Link href={`/projects/project-detail`} passHref>
+                        <Typography
+                          component="a"
+                          sx={{
+                            textDecoration: 'none',
+                            color: 'none',
+                            fontWeight: 500,
+                            '&:hover': { textDecoration: 'underline' },
+                          }}
+                        >
+                          {project.name}
+                        </Typography>
+                      </Link>
                     </Stack>
                   </TableCell>
                   <TableCell>{project.recentActivity}</TableCell>

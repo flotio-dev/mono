@@ -46,6 +46,15 @@ function ProjectList({ t }: { t: (k: string) => string }) {
             {t('dashboard.all_projects')}
           </Button>
         </Link>
+        <Button
+          component="a"
+          href={`https://github.com/apps/${process.env.NEXT_PUBLIC_GITHUB_APP}/installations/new`}
+          target="_blank"
+          variant="contained"
+          color="primary"
+        >
+          Install GitHub App
+        </Button>
       </Stack>
       <Stack>
         {projects.map((project) => (
@@ -110,7 +119,7 @@ export default function DashboardPage() {
     try {
       const stored = typeof window !== 'undefined' ? localStorage.getItem('lang') : null;
       if (stored === 'en' || stored === 'fr') return stored;
-    } catch {}
+    } catch { }
     if (!p) return 'fr';
     const parts = p.split('/');
     const candidate = parts[1];
@@ -159,6 +168,7 @@ export default function DashboardPage() {
   };
   return (
     <Box display="flex" minHeight="100vh">
+      <a href=""></a>
       <Menu />
       <Box component="main" flex={1} p={4}>
         <Stack spacing={4}>

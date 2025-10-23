@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/flotio-dev/api/pkg/api"
+	router "github.com/flotio-dev/api/pkg/api/v1/router"
 	"github.com/flotio-dev/api/pkg/db"
 )
 
@@ -17,7 +17,7 @@ func main() {
 	db.InitDB()
 
 	log.Println("Starting Flotio API server")
-	r := api.Router()
+	r := router.Router()
 	log.Println("Router configured")
 
 	port := os.Getenv("API_PORT")

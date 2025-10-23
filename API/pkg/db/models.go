@@ -13,6 +13,8 @@ type User struct {
 	GithubAccessToken  string    `json:"github_access_token"`
 	GithubRefreshToken string    `json:"github_refresh_token"`
 	Projects           []Project `gorm:"foreignKey:UserID" json:"projects"`
+
+	GithubInstallation *GithubInstallation `gorm:"foreignKey:UserID"`
 }
 
 // Project model
@@ -58,4 +60,27 @@ type Env struct {
 	Project   Project `json:"project"`
 	Key       string  `json:"key"`
 	Value     string  `json:"value"`
+}
+
+type Organization struct {
+	gorm.Model
+	Name                   string `json:"name" gorm:"not null;uniqueIndex"`
+	KeycloakOrganizationID int64  `json:"keycloak_organization_id" gorm:"not null;uniqueIndex"`
+	Description            string `json:"description,omitempty"`
+
+	GithubInstallation *GithubInstallation `gorm:"foreignKey:OrganizationID"`
+}
+
+type GithubInstallation struct {
+	gorm.Model
+
+	InstallationID int64  `json:"github_installation_id" gorm:"not null;uniqueIndex"`
+	UserID         *uint  `json:"user_id,omitempty" gorm:"unique"`
+	OrganizationID *uint  `json:"organization_id,omitempty" gorm:"unique"`
+	AccountLogin   string `json:"account_login" gorm:"not null"`
+	AccountType    string `json:"account_type" gorm:"not null"`
+	TargetID       int64  `json:"target_id" gorm:"not null"`
+
+	User         *User         `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Organization *Organization `gorm:"foreignKey:OrganizationID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }

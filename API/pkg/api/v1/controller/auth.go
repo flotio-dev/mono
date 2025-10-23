@@ -1,4 +1,4 @@
-package api
+package controller
 
 import (
 	"context"
@@ -12,12 +12,10 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v13"
+	middleware "github.com/flotio-dev/api/pkg/api/v1/middleware"
 	"github.com/flotio-dev/api/pkg/db"
+	utils "github.com/flotio-dev/api/pkg/utils"
 )
-
-func getKeycloakClient() *gocloak.GoCloak {
-	return gocloak.NewClient(os.Getenv("KEYCLOAK_BASE_URL"))
-}
 
 func getAdminToken(ctx context.Context, client *gocloak.GoCloak) (*gocloak.JWT, error) {
 	return client.LoginAdmin(ctx, "admin", "admin", "master")
@@ -56,7 +54,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := getKeycloakClient()
+	client := utils.GetKeycloakClient()
 	ctx := context.Background()
 	token, err := getAdminToken(ctx, client)
 	if err != nil {
@@ -114,11 +112,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// If login fails for any reason, fall back to returning a registration success message
 		log.Printf("Auto-login failed for %s: %v", userData.Username, err)
-		writeJSON(w, map[string]string{"status": "registered", "message": "User registered successfully. Please login."})
+		utils.WriteJSON(w, map[string]string{"status": "registered", "message": "User registered successfully. Please login."})
 		return
 	}
 
-	writeJSON(w, map[string]string{"token": tokenResp.AccessToken})
+	utils.WriteJSON(w, map[string]string{"token": tokenResp.AccessToken})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +129,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := getKeycloakClient()
+	client := utils.GetKeycloakClient()
 	ctx := context.Background()
 	realm := os.Getenv("KEYCLOAK_REALM")
 	clientID := os.Getenv("KEYCLOAK_CLIENT_ID")
@@ -146,21 +144,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]string{"token": token.AccessToken})
+	utils.WriteJSON(w, map[string]string{"token": token.AccessToken})
 }
 
 func MeGetHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	writeJSON(w, userInfo)
+	utils.WriteJSON(w, userInfo)
 }
 
 func MePutHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -175,7 +173,7 @@ func MePutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := getKeycloakClient()
+	client := utils.GetKeycloakClient()
 	ctx := context.Background()
 	realm := os.Getenv("KEYCLOAK_REALM")
 
@@ -218,7 +216,7 @@ func MePutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]string{"status": "updated"})
+	utils.WriteJSON(w, map[string]string{"status": "updated"})
 }
 
 func GithubCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -236,7 +234,7 @@ func GithubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GithubHandler(w http.ResponseWriter, r *http.Request) {
-	userInfo := getUserFromContext(r.Context())
+	userInfo := middleware.GetUserFromContext(r.Context())
 	if userInfo == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -254,7 +252,7 @@ func GithubHandler(w http.ResponseWriter, r *http.Request) {
 		redirectURI := "http://localhost:8080/auth/github/callback" // API callback URL
 		scope := "repo,user"
 		url := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=%s", clientID, url.QueryEscape(redirectURI), scope)
-		writeJSON(w, map[string]string{"login_url": url})
+		utils.WriteJSON(w, map[string]string{"login_url": url})
 
 	case "callback":
 		// Handle GitHub OAuth callback
@@ -311,7 +309,7 @@ func GithubHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		writeJSON(w, map[string]string{"status": "connected"})
+		utils.WriteJSON(w, map[string]string{"status": "connected"})
 
 	case "list-repo":
 		// Get user's GitHub repos using stored token
@@ -349,7 +347,7 @@ func GithubHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		writeJSON(w, map[string]interface{}{"repos": repos})
+		utils.WriteJSON(w, map[string]interface{}{"repos": repos})
 
 	case "detail-repo":
 		id := r.URL.Query().Get("id")
@@ -404,7 +402,7 @@ func GithubHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		writeJSON(w, map[string]interface{}{"repo_id": id, "folders": folders})
+		utils.WriteJSON(w, map[string]interface{}{"repo_id": id, "folders": folders})
 
 	default:
 		http.Error(w, "Invalid action", http.StatusBadRequest)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -44,24 +44,48 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     setLoading(true);
+    setMessage(null);
+
     try {
-      const res = await fetch("http://localhost:8000/api/register", {
+      console.log(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (res.ok) {
-        router.push("/login");
-      } else {
+
+      if (!res.ok) {
         const err = await res.json();
         setMessage(err.message || "Error while registering");
+        return;
       }
-    } catch {
+
+      const data = await res.json();
+      const token = data.access_token;
+
+      if (token) {
+        const signInRes = await signIn("credentials", {
+          redirect: false,
+          username: form.username,
+          password: form.password,
+        });
+
+        if (signInRes?.ok) {
+          router.push("/dashboard");
+        } else {
+          router.push("/login");
+        }
+      } else {
+        router.push("/login");
+      }
+    } catch (err) {
       setMessage("Unexpected error");
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div

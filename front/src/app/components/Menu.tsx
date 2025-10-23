@@ -84,7 +84,7 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
 
   return (
     <>
-      <Box
+      {/* <Box
         ref={anchorRef}
         onClick={() => setOpen(true)}
         sx={{
@@ -103,7 +103,7 @@ function OrganizationBlock({ t }: { t: (k: string, p?: Record<string, unknown>) 
         <Typography variant="caption" color="text.secondary">
           {t('settings.change_org_hint') || 'Click to change / add'}
         </Typography>
-      </Box>
+      </Box> */}
 
       <Popover
         open={open}
@@ -370,22 +370,22 @@ export default function Menu() {
       items: [
         { label: t('menu.dashboard'), href: '/dashboard', icon: <SpaceDashboardIcon /> },
         { label: t('menu.projects'), href: '/projects', icon: <FolderIcon /> },
-        { label: t('menu.manage_organization'), href: '/organization', icon: <GroupIcon /> },
+        //{ label: t('menu.manage_organization'), href: '/organization', icon: <GroupIcon /> },
         { label: t('menu.environment_variables'), href: '/env', icon: <DataObjectIcon /> },
-        { label: t('menu.billing'), href: '/billing', icon: <CreditCardIcon /> },
+        //{ label: t('menu.billing'), href: '/billing', icon: <CreditCardIcon /> },
       ],
     },
-    {
-      title: t('menu.credentials'),
-      items: [
-        { label: t('menu.credentials_page'), href: '/credentials', icon: <VpnKeyIcon /> },
-        { label: t('menu.access_tokens'), href: '/tokens', icon: <TokenIcon /> },
-      ],
-    },
+    // {
+    //   title: t('menu.credentials'),
+    //   items: [
+    //     { label: t('menu.credentials_page'), href: '/credentials', icon: <VpnKeyIcon /> },
+    //     { label: t('menu.access_tokens'), href: '/tokens', icon: <TokenIcon /> },
+    //   ],
+    // },
     {
       title: t('menu.settings'),
       items: [
-        { label: t('menu.notifications'), href: '/notifications', icon: <NotificationsIcon /> },
+        //{ label: t('menu.notifications'), href: '/notifications', icon: <NotificationsIcon /> },
         { label: t('menu.account_settings'), href: '/settings', icon: <SettingsIcon /> },
       ],
     },

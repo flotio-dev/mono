@@ -164,7 +164,6 @@ export default function ListingProjects() {
                       </Avatar>
                       <Link href={`/projects/project-detail`} passHref>
                         <Typography
-                          component="a"
                           color="text.primary"
                           sx={{
                             textDecoration: 'none',

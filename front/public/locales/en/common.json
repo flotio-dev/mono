@@ -22,28 +22,27 @@
     "sign_out": "Sign out",
     "welcome_user": "Welcome {{name}}"
   },
-"register": {
-  "welcome": "Welcome!",
-  "subtitle": "Create your account and join our platform to access all features.",
-  "title": "Create Account",
-  "username": "Username",
-  "email": "Email address",
-  "password": "Password",
-  "show": "Show",
-  "hide": "Hide",
-  "submit": "Sign Up",
-  "loading": "Creating account...",
-  "success": "Account created successfully!",
-  "already_account": "Already have an account?",
-  "sign_in": "Sign In",
-  "error_username": "Username must be at least 3 characters.",
-  "error_email": "Invalid email address.",
-  "error_password_required": "Password is required.",
-  "error_password_length": "Password must be at least 8 characters long.",
-  "error_password_uppercase": "Password must contain at least one uppercase letter.",
-  "error_password_digit": "Password must contain at least one number."
-}
-,
+  "register": {
+    "welcome": "Welcome!",
+    "subtitle": "Create your account and join our platform to access all features.",
+    "title": "Create Account",
+    "username": "Username",
+    "email": "Email address",
+    "password": "Password",
+    "show": "Show",
+    "hide": "Hide",
+    "submit": "Sign Up",
+    "loading": "Creating account...",
+    "success": "Account created successfully!",
+    "already_account": "Already have an account?",
+    "sign_in": "Sign In",
+    "error_username": "Username must be at least 3 characters.",
+    "error_email": "Invalid email address.",
+    "error_password_required": "Password is required.",
+    "error_password_length": "Password must be at least 8 characters long.",
+    "error_password_uppercase": "Password must contain at least one uppercase letter.",
+    "error_password_digit": "Password must contain at least one number."
+  },
   "menu": {
     "dashboard": "Dashboard",
     "projects": "Projects",
@@ -207,5 +206,27 @@
     "branch": "Branch",
     "command": "Command",
     "output_dir": "Output directory"
+  },
+  "build_details": {
+    "title": "Build",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "running": "Running",
+    "duration": "Duration",
+    "steps": "Steps",
+    "no_logs": "No logs",
+    "logs": "Logs"
+  },
+  "build_list": {
+    "title": "All builds",
+    "filter_placeholder": "Filter builds",
+    "id": "ID",
+    "status": "Status",
+    "branch": "Branch",
+    "author": "Author",
+    "date": "Date",
+    "duration": "Duration",
+    "commit": "Commit",
+    "no_builds": "No builds found"
   }
 }

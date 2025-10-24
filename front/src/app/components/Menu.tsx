@@ -371,7 +371,7 @@ export default function Menu() {
         { label: t('menu.dashboard'), href: '/dashboard', icon: <SpaceDashboardIcon /> },
         { label: t('menu.projects'), href: '/projects', icon: <FolderIcon /> },
         //{ label: t('menu.manage_organization'), href: '/organization', icon: <GroupIcon /> },
-        { label: t('menu.environment_variables'), href: '/env', icon: <DataObjectIcon /> },
+        { label: t('menu.environment_variables'), href: '/environment-variables', icon: <DataObjectIcon /> },
         //{ label: t('menu.billing'), href: '/billing', icon: <CreditCardIcon /> },
       ],
     },

@@ -25,7 +25,7 @@ export function useProxy() {
             });
 
             if (!res.ok) {
-                addToast({ message: `Erreur proxy globale: ${res.status}`, type: "error" });
+                //addToast({ message: `Erreur proxy globale: ${res.status}`, type: "error" });
                 setLoading(false);
                 return;
             }

@@ -15,38 +15,5 @@ services:
       timeout: 5s
       retries: 5
 
-  postgres-keycloak:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: flotio
-      POSTGRES_PASSWORD: flotio
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_keycloak_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flotio -d keycloak"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:latest
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
-      KC_DB_USERNAME: flotio
-      KC_DB_PASSWORD: flotio
-    ports:
-      - "8081:8080"
-    depends_on:
-      postgres-keycloak:
-        condition: service_healthy
-    command: start-dev
-
 volumes:
   postgres_api_data:
-  postgres_keycloak_data:
